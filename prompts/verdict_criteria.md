@@ -34,6 +34,9 @@ product; give Google, Anthropic, OpenAI, Microsoft, AWS and others the same bar.
 - **Down one star:** a single vendor's feature announcement with no new idea; preview-only or limited regions;
   marketing tells ("unlock", "seamless", customer-logo quotes, no limitations mentioned, sign-up call to action);
   duplicates a better item in the same digest.
+- **Depth is not enough on its own:** a deep technical piece earns ★4 only when its topic sits in the reader's core
+  interests (agents, AI platforms, data platforms, agent security). Deep dives on unrelated infrastructure
+  (storage internals, networking, a niche language SDK) stay ★3 at most.
 - **At most one pure product launch per day** may be a must-read, and only if it clears the core test.
 - **Only the title or curator's note available** (article not reachable): rate the *topic*. If the topic is
   high-value (e.g. a new protocol), it can still be 4★; the reader opens the link. Don't mark it down just
@@ -47,6 +50,8 @@ product; give Google, Anthropic, OpenAI, Microsoft, AWS and others the same bar.
 - A new frontier model from a followed lab → 3★ by default; 4★ only if it changes capability, pricing or
   architecture choices in a way the summary can't convey.
 - A vendor's remote MCP server or agent toolkit GA → 3★, unless it introduces a new pattern (then 4★).
+- Cloud Storage end-to-end checksums deep dive → 3★ (well written, but outside the reader's core interests).
+- A small model release from a big vendor (e.g. a 2B decision model) → 3★ unless it opens a new pattern.
 
 ## Skip: typical reasons
 customer story · marketing recap · event/webinar promo · minor fix · small feature · incremental launch ·

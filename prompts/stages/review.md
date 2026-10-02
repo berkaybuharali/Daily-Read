@@ -15,8 +15,11 @@ Return **every** item in `items`, ordered from most to least important for this 
 "Read fully" means the *full piece* is worth the reader's time. Use `depth`, `full_text_adds` and `word_count`: a deep
 technical piece with substantial `full_text_adds` can deserve it even if its summary sounds modest; an announcement
 whose summary already says everything rarely does. The first-pass `prescreen` is only a hint — you decide. When only a curator note or title was available, rate the topic itself.
-Rank all plausible candidates against each other, then give 4–5 stars only to the best, within `read_budget`
-(never more than `read_cap` — extra ones are demoted automatically).
+**Stars are absolute, not relative.** Rate each item against the rubric on its own merits first, as if it were
+the only item today: a ★4 must clear the rubric's ★4 bar by itself, never because the rest of the day is weak.
+Then, only if more items reached ★4–5 than `read_budget` allows, demote the weakest of them to ★3. The budget is a
+ceiling, never a target: a quiet day with 0–1 must-reads is normal (never more than `read_cap`; extra ones are
+demoted automatically).
 
 ## 2. Highlights
 Write **3–4 highlight bullets** for a reader with only one minute: the most important things that happened in
