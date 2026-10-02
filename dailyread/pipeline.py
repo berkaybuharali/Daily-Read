@@ -512,6 +512,13 @@ def _pipeline(cfg: Config, opts: RunOptions, now: datetime, p: dict[str, Path], 
     for key, r in results.items():
         if r.stats.status not in OK_STATUSES:
             errors.append(f"{key}: {r.stats.status}: {r.stats.error}")
+    if not opts.dry_run and results and not any(r.stats.status in OK_STATUSES for r in results.values()):
+        # nothing fetched (offline, DNS, captive portal): an empty report would end today's attempts for nothing
+        msg = "no source could be fetched (offline?)"
+        store.append_run({"run_id": f"{run_id}-offline", "ok": False, "mode": "real",
+                          "started_at": now.isoformat(timespec="seconds"), "report_date": today, "errors": [msg]})
+        store.record_failure(today, msg)
+        raise RunFailed(msg)
 
     # ---- S2 summaries ‖ IT news ------------------------------------------------------------------------------
     it_section = next((s for s in sections_cfg if s.key == IT_NEWS), None)

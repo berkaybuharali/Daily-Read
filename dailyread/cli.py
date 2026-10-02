@@ -5,6 +5,8 @@
   run                          real run: window from state, archives previous report, advances state
   render <data.json>           re-render a saved report JSON (iterate on design without Claude calls)
   usage [--dry-run]            print token usage history
+  schedule install|uninstall|status   daily automation via launchd (Phase 2)
+  scheduled                    one launchd tick: runs the real pipeline if today's report is due
 """
 from __future__ import annotations
 
@@ -52,6 +54,9 @@ def main(argv: list[str] | None = None) -> int:
     rr.add_argument("--no-open", action="store_true")
     u = sub.add_parser("usage", help="print token usage history")
     u.add_argument("--dry-run", action="store_true")
+    sc = sub.add_parser("schedule", help="daily automation via launchd")
+    sc.add_argument("action", choices=["install", "uninstall", "status"])
+    sub.add_parser("scheduled", help="one launchd tick (used by the LaunchAgent)")
     args = ap.parse_args(argv)
 
     cfg = load_config()
@@ -83,6 +88,19 @@ def main(argv: list[str] | None = None) -> int:
         if not args.no_open:
             open_in_browser(cfg, out)
         return 0
+
+    if args.cmd == "schedule":
+        from . import schedule
+        try:
+            print({"install": schedule.install, "uninstall": schedule.uninstall, "status": schedule.status}[args.action](cfg))
+        except RuntimeError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.cmd == "scheduled":
+        from . import schedule
+        return schedule.tick(cfg)
 
     if args.cmd == "usage":
         store = StateStore(paths(cfg, args.dry_run)["state"])

@@ -15,7 +15,7 @@ reading in full, and opens a single self-contained HTML report in your browser.
 
 ## Requirements
 
-- macOS (report opening and the planned launchd automation are macOS-specific; the pipeline itself is plain Python)
+- macOS (report opening and the launchd automation are macOS-specific; the pipeline itself is plain Python)
 - [uv](https://docs.astral.sh/uv/) (installs Python 3.12+ and dependencies)
 - [Claude Code](https://docs.claude.com/en/docs/claude-code) installed and logged in (`claude` on your `PATH`,
   default `~/.local/bin/claude`; change `claude.bin` in `config.yaml` otherwise)
@@ -37,7 +37,7 @@ Notes:
 - Claude runs locked down: no tools, no MCP servers, no settings from your projects. It only reads the fetched
   text and returns JSON (see [How it works](#how-it-works)).
 - If you use several Claude accounts through `CLAUDE_CONFIG_DIR`, the run uses whichever config directory is set
-  in its environment. For the scheduled job, set it in the launchd plist.
+  in its environment. `schedule install` copies it from your shell into the scheduled job.
 
 ## Quick start
 
@@ -61,6 +61,7 @@ If `prompts/profile.md` doesn't exist, the example profile is used.
 | `bin/dailyread render data/<file>.json` | Re-render a saved run after template/CSS changes (no Claude calls) |
 | `bin/dailyread usage [--dry-run]` | Token usage history per run and stage |
 | `bin/dailyread mockup` | Render `fixtures/sample_report.json` |
+| `bin/dailyread schedule install\|uninstall\|status` | Daily automation via launchd (see below) |
 | `uv run --group dev pytest` | Unit tests (no network, no Claude) |
 
 Add `-v` for progress logs and `--no-open` to skip opening the browser. Logs go to `logs/<date>.log`.
@@ -78,23 +79,32 @@ Add `-v` for progress logs and `--no-open` to skip opening the browser. Logs go 
 | `state/seen.json` | Item ids already reported (no repeats) |
 | `state/runs.jsonl` | One line per run: duration, items, errors, tokens and cost per stage |
 
-## Scheduling on a Mac (Phase 2: planned, not built yet)
+## Scheduling on a Mac
 
-> Until this is built, run `bin/dailyread run` yourself once in the morning. Each real run covers everything since
-> the previous report, so a skipped day is caught up automatically (up to 14 days back).
+Daily Read uses **launchd**, macOS's built-in scheduler. You don't need cron, a server, or to keep a terminal open.
 
-The planned automation uses **launchd**, macOS's built-in scheduler, and needs no cron and no server:
+```bash
+bin/dailyread schedule install     # install and start the LaunchAgent
+bin/dailyread schedule status      # is it loaded? last report, failures today, what the next check would do
+bin/dailyread schedule uninstall   # stop and remove it
+```
 
-- A LaunchAgent in `~/Library/LaunchAgents/` runs at login and then every 30 minutes. A tick missed while the
-  Mac was asleep fires once on wake.
-- Each tick is cheap: if today's report already exists, or it's before 07:00, it exits immediately without calling
-  Claude. So the report is made **the first time the Mac is on after 07:00**, once a day.
-- A failed run doesn't advance state, so the next tick simply retries. After 3 failures in one day it shows a
-  macOS notification and waits until tomorrow.
-- The new report opens in Chrome, the previous one moves to `reports/archive/<year>/`, and `reports/index.html`
-  is updated.
+How it behaves:
 
-Install and uninstall commands will be added here when Phase 2 lands.
+- A LaunchAgent (`~/Library/LaunchAgents/com.dailyread.agent.plist`) runs a check at login and then every 30
+  minutes. A check missed while the Mac was asleep fires once on wake.
+- A check is instant when today's report already exists or it's before 07:00. So the report is made **the
+  first time the Mac is on after 07:00**, once a day, and opens in Chrome.
+- If the Mac is offline, or Claude says your usage limit is reached, the check just tries again 30 minutes later.
+- A failed run doesn't advance state, so the next check retries. After **3 failed attempts in a day** you get a
+  macOS notification, and it waits until tomorrow. Tomorrow's report then covers both days.
+- The previous report moves to `reports/archive/<year>/`, and `reports/index.html` is updated.
+- Settings (`not_before`, `interval_minutes`, `max_failures_per_day`) are in `config.yaml` → `schedule:`. Run
+  `schedule install` again after changing them.
+- Logs: `logs/<date>.log` (pipeline and scheduler) and `logs/launchd.log` (anything printed by the job).
+- **Which Claude login:** the job uses the `CLAUDE_CONFIG_DIR` of the shell you ran `schedule install` from (the
+  default `~/.claude` if it isn't set). `schedule install` prints which one.
+- The Mac has to be on and logged in. launchd doesn't wake a sleeping Mac; the report is made when you open it.
 
 ## Customising
 

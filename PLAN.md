@@ -1,6 +1,6 @@
 # Daily Read — Plan
 
-Status: **PHASE 1 — BUILT, in review/iteration** (approved 2026-10-02). Phase 2 (automation) not started.
+Status: **PHASE 1 + PHASE 2 BUILT** (2026-10-02). Automation: launchd LaunchAgent installed via `bin/dailyread schedule install`.
 Last updated: 2026-10-02 (rev 7)
 
 > Rev 7 (2026-10-02): §4/§5 rewritten to the current all-Sonnet design; star rubric with "judge the idea, not
@@ -246,14 +246,17 @@ state/items/         (Phase 2, optional) collector store for short-history feeds
 The report index page (`reports/index.html`) also gets a small **"Sources health"** table from
 `sources.json`: last fetch status, newest item date, items this run — so a broken parser is visible.
 
-## 8. Scheduling (Phase 2)
+## 8. Scheduling (Phase 2, built 2026-10-02)
 
-- **launchd** = built-in macOS scheduler. LaunchAgent plist in `~/Library/LaunchAgents/`:
-  `RunAtLoad` (login) + `StartInterval 1800` (every 30 min; missed ticks during sleep fire once on wake).
-- `run.sh` guard: lock → `last_report_date == today` → exit (ms, no Claude) → before 07:00 → exit → run.
-- Failure: state not advanced → next tick retries. After 3 failures/day → macOS notification, stop until tomorrow.
-- Success: move previous report to archive, write new report, update index + state, `open -a "Google Chrome"`.
-- Manual: `bin/dailyread now` rebuilds today's report for the same window.
+- **launchd** LaunchAgent `~/Library/LaunchAgents/com.dailyread.agent.plist` (written by `bin/dailyread schedule
+  install`): `RunAtLoad` (login) + `StartInterval 1800`; missed ticks during sleep fire once on wake.
+  Env: PATH with `~/.local/bin` + Homebrew, and `CLAUDE_CONFIG_DIR` copied from the installing shell.
+- Tick (`bin/dailyread scheduled` → `schedule.tick`): `last_report_date == today` → exit · before `not_before`
+  (07:00) → exit · `failed_attempts_today ≥ 3` → exit · offline → exit (not counted) · else real run (lock held).
+- Failure: state not advanced → next tick retries. Usage-limit failures are not counted. On the 3rd failure of the
+  day → macOS notification (`osascript`), then nothing until tomorrow.
+- A real run where no source could be fetched fails (no empty report that would end the day's attempts).
+- Settings in `config.yaml` → `schedule:`; `schedule status` shows the job state and what the next tick would do.
 
 ## 9. Build phases
 

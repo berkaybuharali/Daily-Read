@@ -8,6 +8,12 @@ output:
   open_in_browser: true
   browser_app: "Google Chrome"
 
+schedule:                  # Phase 2 automation: `bin/dailyread schedule install` (launchd LaunchAgent)
+  not_before: "07:00"      # the report is made at the first check after this time (or first wake/login after it)
+  interval_minutes: 30     # how often launchd checks; a check is instant when today's report already exists
+  max_failures_per_day: 3  # then a macOS notification and no more tries until tomorrow
+  label: com.dailyread.agent
+
 claude:
   bin: "~/.local/bin/claude"
   max_parallel: 4          # concurrent `claude -p` processes

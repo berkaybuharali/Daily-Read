@@ -286,3 +286,54 @@ def test_failed_run_records_health_without_advancing(tmp_path):
     assert src["covered_until"] == w1.end.isoformat(timespec="seconds")
     assert src["consecutive_failures"] == 1 and src["last_error"] == "boom"
     assert src["last_fetch_at"] == w2.end.isoformat(timespec="seconds")
+
+
+def test_schedule_skip_reasons():
+    from datetime import time as dtime
+    from dailyread.schedule import skip_reason
+    now = datetime(2026, 10, 3, 8, 0, tzinfo=AMS)
+    nb = dtime(7, 0)
+    assert skip_reason({"last_report_date": "2026-10-03"}, now, nb, 3) == "today's report already exists"
+    assert skip_reason({"last_report_date": "2026-10-02"}, now.replace(hour=6), nb, 3) == "before 07:00"
+    assert skip_reason({"last_report_date": "2026-10-02"}, now, nb, 3) is None
+    gave_up = {"last_report_date": "2026-10-02", "last_failure_date": "2026-10-03", "failed_attempts_today": 3}
+    assert "gave up" in skip_reason(gave_up, now, nb, 3)
+    yesterday_fails = {**gave_up, "last_failure_date": "2026-10-02"}
+    assert skip_reason(yesterday_fails, now, nb, 3) is None
+
+
+def test_schedule_plist_uses_claude_config_dir():
+    from dailyread.schedule import build_plist
+    p = build_plist(CFG, env={"CLAUDE_CONFIG_DIR": "/x/.claude-work"})
+    assert p["ProgramArguments"][-1] == "scheduled" and p["RunAtLoad"] is True
+    assert p["StartInterval"] == 30 * 60
+    assert p["EnvironmentVariables"]["CLAUDE_CONFIG_DIR"] == "/x/.claude-work"
+    assert "CLAUDE_CONFIG_DIR" not in build_plist(CFG, env={})["EnvironmentVariables"]
+
+
+def test_scheduler_usage_limit_does_not_burn_attempt(tmp_path, monkeypatch):
+    from dailyread import schedule
+    from dailyread.pipeline import RunFailed
+    store = StateStore(tmp_path)
+    store.save_state({"last_report_date": "2026-10-02"})
+    monkeypatch.setattr(schedule, "paths", lambda cfg, dry_run: {"state": tmp_path})
+    monkeypatch.setattr(schedule, "online", lambda: True)
+    notes = []
+    monkeypatch.setattr(schedule, "notify", lambda t, m: notes.append(m))
+
+    def fail_with(msg):
+        def _run(cfg, opts):
+            store.record_failure("2026-10-03", msg)
+            raise RunFailed(msg)
+        return _run
+
+    now = datetime(2026, 10, 3, 8, 0, tzinfo=AMS)
+    monkeypatch.setattr(schedule, "run", fail_with("review: You've hit your session limit · resets 5:30pm"))
+    schedule.tick(CFG, now)
+    assert store.state()["failed_attempts_today"] == 0
+    monkeypatch.setattr(schedule, "run", fail_with("review: boom"))
+    for _ in range(3):
+        schedule.tick(CFG, now)
+    assert store.state()["failed_attempts_today"] == 3 and len(notes) == 1
+    schedule.tick(CFG, now)                     # gave up: no 4th attempt
+    assert store.state()["failed_attempts_today"] == 3

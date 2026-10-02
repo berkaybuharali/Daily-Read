@@ -2,7 +2,7 @@
 
 Local daily reading digest. Python fetches sources → `claude -p` (headless Claude Code, user's subscription, no API
 key) summarizes and judges → Jinja2 renders a self-contained HTML report → opened in Chrome.
-Full design and decisions: `PLAN.md`. Phase 1 (manual runs, iterate on output) is current; Phase 2 adds launchd automation.
+Full design and decisions: `PLAN.md`. Phase 1 (pipeline) and Phase 2 (launchd automation, `dailyread/schedule.py`) are built.
 
 ## How to run
 
@@ -12,7 +12,8 @@ bin/dailyread run --dry-run          # full pipeline, window = yesterday 00:00 �
 bin/dailyread run --dry-run --since 2026-10-01T00:00 --only gcloud_blog,bigquery_rn   # narrower test
 bin/dailyread render data/dry-run/<stamp>.json   # re-render saved data after template/CSS changes (no Claude)
 bin/dailyread usage [--dry-run]      # token usage history
-bin/dailyread run                    # REAL run: advances state/, archives previous report (Phase 2 uses this)
+bin/dailyread run                    # REAL run: advances state/, archives previous report
+bin/dailyread schedule install|uninstall|status   # launchd LaunchAgent (Phase 2); `scheduled` = one tick
 uv run --group dev pytest            # unit tests (no network, no Claude) — run after any change to dailyread/
 ```
 Add `-v` to `run` for progress logs; `--no-open` to skip opening Chrome. Logs: `logs/<date>.log`.
@@ -28,6 +29,7 @@ dailyread/
   pipeline.py            stages: fetch → summarize ‖ IT news → review → render → persist
   llm.py                 locked-down `claude -p` runner + usage records
   state.py               state.json / sources.json / seen.json / runs.jsonl / run.lock
+  schedule.py            launchd tick (skip rules, retries, notification) + LaunchAgent install/status
   render.py, cli.py, http.py (retries + curl fallback), timeutil.py, models.py, config.py
 prompts/                 profile.md (user-owned), untrusted_input.md (prepended to every prompt), summary_rules.md,
                          verdict_criteria.md, verdict_budget.md, it_news_rules.md, output_rules.md, stages/*.md
@@ -164,4 +166,7 @@ blocked on the user's network by a DNS filter), Anthropic `rss.xml` (404).
   did not reliably turn it off in a test (2026-10-02), so it is not set.
 - Real runs cover at most 14 days (`MAX_WINDOW_DAYS`); review timeout scales with item count.
 - Same-day re-run: a source failing now keeps this morning's items (`carry_over_failed_sections`).
+- Scheduler (verified 2026-10-02): `claude -p` works under launchd (keychain login OK) with the plist's PATH and
+  `CLAUDE_CONFIG_DIR` (copied from the installing shell). Usage-limit failures and offline checks don't count
+  toward `max_failures_per_day`. A real run where no source could be fetched fails instead of making an empty report.
 - Headless Chrome screenshots have a ~500px minimum width; test phone layouts inside a 390px iframe.
