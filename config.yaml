@@ -1,0 +1,115 @@
+# Daily Read configuration. Edit freely; no code changes needed for anything here.
+
+timezone: Europe/Amsterdam
+# Start of the very first real window (local time). Later windows start where the previous report ended.
+first_window_start: "2026-10-01T00:00:00"
+
+output:
+  open_in_browser: true
+  browser_app: "Google Chrome"
+
+claude:
+  bin: "~/.local/bin/claude"
+  max_parallel: 4          # concurrent `claude -p` processes
+  timeout_seconds: 300     # per call
+  retries: 2               # per call, backoff 5s, 10s
+  models:                  # aliases understood by `claude --model`
+    summarize: sonnet      # S2a: summaries, titles for release notes, verdict pre-screen, Dev Blog filter (Sonnet: better + faster than Haiku in the 2026-10-02 comparison)
+    it_prefilter: sonnet   # S2b: ~110 headlines -> ~25 candidate stories
+    it_pick: sonnet        # S3b: pick 5-10 stories
+    it_summarize: sonnet   # S3c: summarize the picked stories
+    review: sonnet         # S4: overall review: 1-5 stars for every item, verdicts, highlights
+    shorten: sonnet        # fix pass for summaries failing the lint (too long, filler opener, hype)
+  thinking:                # extended thinking per stage (CLI default is ON; it multiplies Haiku output/time ~5x)
+    summarize: false
+    it_prefilter: false
+    it_pick: true
+    it_summarize: false
+    review: true
+    shorten: false
+
+http:
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36"
+  timeout_seconds: 20
+  max_parallel: 16
+  retries: 5               # 429 / 5xx / network errors: exponential backoff 2,4,8,16,32s (+jitter, max 60s)
+  backoff_base_seconds: 2
+
+limits:
+  article_max_words: 1200      # article text sent to the model per item
+  summarize_chunk_size: 8      # items per summarize call
+  summary_max_chars: 300
+  it_candidates_max: 30
+  it_picks_min: 5
+  it_picks_max: 10
+
+# Report order = list order. Keys refer to source implementations in dailyread/sources/.
+# Disable a source for future runs: add `enabled: false` under it (it is then not fetched and not shown).
+# Re-enable by removing the line; it catches up from where it left off (at most 14 days back).
+# Private sources and overrides: config.local.yaml (git-ignored), see README "Private sources".
+sections:
+  - key: gemini_enterprise_rn
+    enabled: true
+    title: Gemini Enterprise release notes
+    short: "Gemini Enterprise"
+    icon: "✨"
+    url: https://docs.cloud.google.com/feeds/gemini-enterprise-release-notes.xml
+  - key: claude_code_rn
+    enabled: true
+    title: Claude Code release notes
+    short: "Claude Code"
+    icon: "🧑‍💻"
+    url: https://github.com/anthropics/claude-code/releases.atom
+  - key: claude_platform_rn
+    enabled: true
+    title: Claude Platform release notes
+    short: "Claude Platform"
+    icon: "🧩"
+    url: https://platform.claude.com/docs/en/release-notes/overview
+  - key: anthropic_blogs
+    enabled: true
+    title: Anthropic & Claude blogs
+    short: "Anthropic blogs"
+    icon: "📝"
+    url: https://www.anthropic.com/sitemap.xml
+    extra_urls: [https://www.claude.com/sitemap.xml]
+  - key: agent_platform_rn
+    enabled: true
+    title: Gemini Enterprise Agent Platform release notes
+    short: "Agent Platform"
+    icon: "🤖"
+    url: https://cloud.google.com/feeds/gemini-enterprise-agent-platform-release-notes.xml
+  - key: bigquery_rn
+    enabled: true
+    title: BigQuery release notes
+    short: "BigQuery"
+    icon: "📊"
+    url: https://docs.cloud.google.com/feeds/bigquery-release-notes.xml
+  - key: gcloud_blog
+    enabled: true
+    title: Google Cloud Blog
+    short: "Cloud Blog"
+    icon: "☁️"
+    url: https://cloudblog.withgoogle.com/rss/
+  - key: google_dev_blog
+    enabled: true
+    title: Google Developers Blog (AI & Cloud)
+    short: "Developers Blog"
+    icon: "🛠️"
+    url: https://developers.googleblog.com/feeds/posts/default
+  - key: simon_willison
+    enabled: true
+    title: Simon Willison
+    short: "Simon Willison"
+    icon: "🧠"
+    url: https://simonwillison.net/atom/entries/
+  - key: it_news
+    enabled: true
+    title: IT industry news
+    short: "IT news"
+    icon: "📰"
+    url: https://www.techmeme.com/river
+    extra_urls:
+      - https://siliconangle.com/feed/
+      - https://techcrunch.com/category/artificial-intelligence/feed/
+      - https://techcrunch.com/category/fundraising/feed/

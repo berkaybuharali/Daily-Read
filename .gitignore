@@ -1,0 +1,28 @@
+# --- Python / tooling ---
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# --- Claude Code: local session settings ---
+.claude/settings.local.json
+
+# --- Personal data and run output (never push) ---
+# Your reading profile; the repo ships prompts/profile.example.md (used when profile.md is missing).
+prompts/profile.md
+# Real / dry-run state: covered_until, seen items, run history.
+state/
+state-dryrun/
+# Report JSON per run (contains fetched article text), generated HTML reports, logs, scraped dates.
+data/
+reports/
+logs/
+cache/
+
+# --- Private sources and config (see README "Private sources") ---
+config.local.yaml
+CLAUDE.local.md
+local_sources/*
+!local_sources/README.md
+!local_sources/example_source.py

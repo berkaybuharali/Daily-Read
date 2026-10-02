@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "properties": {
+    "picks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "story_id": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "gcp",
+              "anthropic",
+              "netherlands",
+              "europe",
+              "turkiye",
+              "big",
+              "other"
+            ]
+          },
+          "importance": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "duplicate_of_covered": {
+            "type": "integer",
+            "minimum": -1
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "story_id",
+          "company",
+          "priority",
+          "importance",
+          "duplicate_of_covered",
+          "why"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "picks",
+    "note"
+  ],
+  "additionalProperties": false
+}

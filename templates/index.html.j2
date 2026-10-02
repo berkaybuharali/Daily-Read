@@ -1,0 +1,67 @@
+{% extends "_base.html.j2" %}
+{% block title %}Daily Read · History{% endblock %}
+{% block body %}
+<header class="masthead">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">📖</div>
+    <div><h1>Daily <span>Read</span></h1>
+    <p class="sub">Reports, usage history and source health{% if dry_run %}<span class="mode-tag">dry-run</span>{% endif %}</p></div>
+  </div>
+  <div class="stats"><button class="theme-btn" id="theme-btn" type="button">☾ Dark</button></div>
+</header>
+
+<section class="panel">
+  <h2>Reports</h2>
+  <table>
+    <thead><tr><th>Report</th><th>Window</th><th class="num">Items</th><th class="num">✅</th></tr></thead>
+    <tbody>
+    {% for r in reports %}
+      <tr><td><a href="{{ r.href }}">{{ r.name }}</a></td><td>{{ r.window or "—" }}</td><td class="num">{{ r["items"] if r["items"] is not none else "—" }}</td><td class="num">{{ r.read if r.read is not none else "—" }}</td></tr>
+    {% else %}
+      <tr><td colspan="4">No reports yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Usage history</h2>
+  <table>
+    <thead><tr><th>Run</th><th>OK</th><th class="num">Window (d)</th><th class="num">Items</th><th class="num">✅</th>
+      {% for m in models %}<th class="num">{{ m | title }} calls</th><th class="num">{{ m | title }} in / out</th>{% endfor %}
+      <th class="num">≈ API $</th><th class="num">Duration</th></tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td>{{ r.started }}</td><td class="{{ 'status-ok' if r.ok else 'status-bad' }}">{{ "✓" if r.ok else "✗" }}</td>
+        <td class="num">{{ r.window_days }}</td><td class="num">{{ r["items"] }}</td><td class="num">{{ r.read }}</td>
+        {% for m in models %}{% set u = r.models.get(m, {"calls": 0, "inp": 0, "out": 0}) %}<td class="num">{{ u.calls }}</td><td class="num">{{ u.inp | thousands }} / {{ u.out | thousands }}</td>{% endfor %}
+        <td class="num">{{ "%.3f" | format(r.cost) }}</td><td class="num">{{ r.duration }}s</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="{{ 7 + 2 * models | length }}">No runs yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Source health</h2>
+  <table>
+    <thead><tr><th>Source</th><th>Status</th><th>Last fetch</th><th class="num">In feed</th><th>Feed reaches back to</th><th>Newest item</th><th class="num">Last run found / kept / ✅</th><th>Fails</th></tr></thead>
+    <tbody>
+    {% for s in sources %}
+      <tr>
+        <td>{{ s.title }}</td>
+        <td class="{{ 'status-ok' if s.status == 'ok' else 'status-empty' if s.status == 'empty' else 'status-bad' }}" title="{{ s.last_error or '' }}">{{ s.status or "—" }}</td>
+        <td>{{ s.last_fetch_at or "—" }}</td><td class="num">{{ s.items_in_feed or "—" }}</td>
+        <td>{{ s.oldest_item_in_feed or "—" }}</td><td>{{ s.newest_item_in_feed or s.latest_item_date or "—" }}</td>
+        <td class="num">{{ s.found_in_window or 0 }} / {{ s.kept or 0 }} / {{ s.read_fully or 0 }}</td>
+        <td>{{ s.consecutive_failures or 0 }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<footer class="foot"><span>Token counts are per run as reported by <code>claude -p</code>; “≈ API $” is the list-price equivalent the CLI reports (subscription runs are not billed per token).</span></footer>
+{% endblock %}

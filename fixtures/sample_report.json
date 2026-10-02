@@ -1,0 +1,684 @@
+{
+ "run_id": "mockup",
+ "mode": "mockup",
+ "generated_at": "2026-10-02T09:14:00+02:00",
+ "window": {
+  "start": "2026-10-01T00:00:00+02:00",
+  "end": "2026-10-02T09:14:00+02:00",
+  "label": "Thu 1 Oct 00:00 → Fri 2 Oct 09:14",
+  "days": 1.4
+ },
+ "highlights": [
+  {
+   "text": "Claude Code v2.1.287 adds Claude Mods, letting plugins change deeper behavior, plus a built-in side agent that flags risks during sessions.",
+   "item_ids": [
+    "cc1"
+   ]
+  },
+  {
+   "text": "Sonnet 4.5 (`claude-sonnet-4-5-20250929`) retires from the Claude API on 30 Nov 2026; Anthropic points to Sonnet 5.5 as the migration path.",
+   "item_ids": [
+    "cp1"
+   ]
+  },
+  {
+   "text": "BigQuery adds a Security center in the console and graph answers in conversational analytics; `AI.KEY_DRIVERS` is now GA.",
+   "item_ids": [
+    "bq2",
+    "bq1"
+   ]
+  },
+  {
+   "text": "Cloudflare releases open-weight decision models Clef and Clef-flash, built on Qwen, positioned against Jev.",
+   "item_ids": [
+    "it2"
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "key": "reading_list",
+   "title": "Daily reading list (private source example)",
+   "url": "https://example.com/reading-list/feed/",
+   "items": [
+    {
+     "id": "se1",
+     "source": "",
+     "url": "https://addyo.substack.com/p/the-code-nobody-reads",
+     "published": null,
+     "day": "2026-10-02",
+     "title": "The Code Nobody Reads",
+     "kind": "blog",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "As agents write more code, review shifts from reading every line to deciding which changes need human attention; proposes risk-based review tiers and stronger automated checks for the rest.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "candidate",
+     "verdict": "read",
+     "reason": "You should read because it frames a practical review model for agent-written code.",
+     "llm_error": null,
+     "stars": 4
+    },
+    {
+     "id": "se2",
+     "source": "",
+     "url": "https://medium.com/google-cloud/create-an-agent-that-remembers",
+     "published": null,
+     "day": "2026-10-02",
+     "title": "Create an Agent that Remembers with Agent Platform Memory Bank",
+     "kind": "blog",
+     "content": "",
+     "content_origin": "curator_note",
+     "extra": {},
+     "summary": "Walkthrough of Agent Platform Memory Bank: storing and retrieving long-term memories per user so an ADK agent can reuse context across sessions.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "summary is enough",
+     "llm_error": null,
+     "stars": 3
+    },
+    {
+     "id": "se3",
+     "source": "",
+     "url": "https://www.blog4ems.com/p/maintaining-quality-agentic-engineering",
+     "published": null,
+     "day": "2026-10-02",
+     "title": "Maintaining quality while agents write the code",
+     "kind": "article",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Argues that quality with coding agents depends on explicit decision records and review checkpoints at design boundaries rather than line-level review.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "overlaps with ✅ item",
+     "llm_error": null,
+     "stars": 3
+    },
+    {
+     "id": "se4",
+     "source": "",
+     "url": "https://blog.alexewerlof.com/p/coding-is-not-solved",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Coding is NOT solved",
+     "kind": "blog",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Counterpoint to agent-coding optimism: engineers stay accountable for code they ship, so understanding generated code remains necessary.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "opinion piece",
+     "llm_error": null,
+     "stars": 2
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": false,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "ok",
+    "read_fully": 1,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  },
+  {
+   "key": "gemini_enterprise_rn",
+   "title": "Gemini Enterprise release notes",
+   "url": "https://docs.cloud.google.com/feeds/gemini-enterprise-release-notes.xml",
+   "items": [],
+   "filtered_out": 0,
+   "is_release_notes": true,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "empty",
+    "read_fully": 0,
+    "latest_item_date": "2026-09-29",
+    "newest_item_in_feed": "2026-09-29",
+    "error": null
+   }
+  },
+  {
+   "key": "claude_code_rn",
+   "title": "Claude Code release notes",
+   "url": "https://github.com/anthropics/claude-code/releases.atom",
+   "items": [
+    {
+     "id": "cc1",
+     "source": "",
+     "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.287",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Claude Code v2.1.287",
+     "kind": "Release",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Adds Claude Mods so plugins can modify deeper behavior, a built-in \"You should know\" mod where a side agent flags issues, and an `n:<text>` filter in the agents view.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "candidate",
+     "verdict": "read",
+     "reason": "You should read because Claude Mods changes what plugins can customize.",
+     "llm_error": null,
+     "stars": 4
+    },
+    {
+     "id": "cc2",
+     "source": "",
+     "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.286",
+     "published": null,
+     "day": "2026-09-30",
+     "title": "Claude Code v2.1.286",
+     "kind": "Release",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Fixes session resume after network drops and speeds up large-repo indexing; adds `--json-schema` validation errors to headless output.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "minor fixes",
+     "llm_error": null,
+     "stars": 2
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": true,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "ok",
+    "read_fully": 1,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  },
+  {
+   "key": "claude_platform_rn",
+   "title": "Claude Platform release notes",
+   "url": "https://platform.claude.com/docs/en/release-notes/overview",
+   "items": [
+    {
+     "id": "cp1",
+     "source": "",
+     "url": "https://platform.claude.com/docs/en/release-notes/overview#september-30-2026",
+     "published": null,
+     "day": "2026-09-30",
+     "title": null,
+     "kind": "Deprecated",
+     "content": "",
+     "content_origin": "release_note",
+     "extra": {},
+     "summary": "Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`) is deprecated; retirement on the Claude API is scheduled for November 30, 2026, with Claude Sonnet 5.5 as the recommended migration target.",
+     "gen_title": "Sonnet 4.5 deprecation and retirement date",
+     "relevant": true,
+     "prescreen": "candidate",
+     "verdict": "read",
+     "reason": "You should read because the 30 Nov retirement needs a migration check.",
+     "llm_error": null,
+     "stars": 5
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": true,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "ok",
+    "read_fully": 1,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  },
+  {
+   "key": "anthropic_blogs",
+   "title": "Anthropic & Claude blogs",
+   "url": "https://www.anthropic.com/sitemap.xml",
+   "items": [
+    {
+     "id": "an1",
+     "source": "",
+     "url": "https://www.anthropic.com/research/claude-shaped-science",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Claude-shaped science",
+     "kind": "Research",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Describes how research workflows change when Claude runs experiments end to end, with examples of hypothesis generation, lab protocol design and verification steps.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "long read, low priority",
+     "llm_error": null,
+     "stars": 2
+    },
+    {
+     "id": "an2",
+     "source": "",
+     "url": "https://www.anthropic.com/news/barclays-scales-claude",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Barclays scales Claude to upgrade operations and improve client experience",
+     "kind": "News",
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Barclays is rolling Claude out across operations and client-service teams, using Claude Code for engineering and agents for document-heavy back-office work.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "customer story",
+     "llm_error": null,
+     "stars": 1
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": false,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "ok",
+    "read_fully": 0,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  },
+  {
+   "key": "agent_platform_rn",
+   "title": "Gemini Enterprise Agent Platform release notes",
+   "url": "https://cloud.google.com/feeds/gemini-enterprise-agent-platform-release-notes.xml",
+   "items": [],
+   "filtered_out": 0,
+   "is_release_notes": true,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "empty",
+    "read_fully": 0,
+    "latest_item_date": "2026-09-30",
+    "newest_item_in_feed": "2026-09-30",
+    "error": null
+   }
+  },
+  {
+   "key": "bigquery_rn",
+   "title": "BigQuery release notes",
+   "url": "https://docs.cloud.google.com/feeds/bigquery-release-notes.xml",
+   "items": [
+    {
+     "id": "bq2",
+     "source": "",
+     "url": "https://docs.cloud.google.com/bigquery/docs/release-notes#October_01_2026",
+     "published": null,
+     "day": "2026-10-01",
+     "title": null,
+     "kind": "Feature",
+     "content": "",
+     "content_origin": "release_note",
+     "extra": {},
+     "summary": "The BigQuery Security center is available in the Google Cloud console to analyze your data security profile and review findings for datasets and tables.",
+     "gen_title": "Security center for BigQuery in the console",
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "summary is enough",
+     "llm_error": null,
+     "stars": 3
+    },
+    {
+     "id": "bq1",
+     "source": "",
+     "url": "https://docs.cloud.google.com/bigquery/docs/release-notes#October_01_2026",
+     "published": null,
+     "day": "2026-10-01",
+     "title": null,
+     "kind": "Feature",
+     "content": "",
+     "content_origin": "release_note",
+     "extra": {},
+     "summary": "Conversational analytics can now answer with graphs, rendering chart responses for questions asked in natural language over BigQuery data.",
+     "gen_title": "Graph answers in conversational analytics",
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "small feature",
+     "llm_error": null,
+     "stars": 2
+    },
+    {
+     "id": "bq3",
+     "source": "",
+     "url": "https://docs.cloud.google.com/bigquery/docs/release-notes#October_01_2026",
+     "published": null,
+     "day": "2026-10-01",
+     "title": null,
+     "kind": "Changed",
+     "content": "",
+     "content_origin": "release_note",
+     "extra": {},
+     "summary": "An updated version of the Simba JDBC driver for BigQuery is available.",
+     "gen_title": "Updated Simba JDBC driver",
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "driver update",
+     "llm_error": null,
+     "stars": 1
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": true,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "ok",
+    "read_fully": 0,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  },
+  {
+   "key": "gcloud_blog",
+   "title": "Google Cloud Blog",
+   "url": "https://cloudblog.withgoogle.com/rss/",
+   "items": [
+    {
+     "id": "gc1",
+     "source": "",
+     "url": "https://cloud.google.com/blog/products/ai-machine-learning/google-cloud-cli-remote-mcp-server",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Empower your agents with the Google Cloud CLI remote MCP server",
+     "kind": null,
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "A remote MCP server exposes `gcloud` operations to agents with IAM-scoped credentials, so coding agents can inspect and change Google Cloud resources through a standard tool interface.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "candidate",
+     "verdict": "read",
+     "reason": "You should read because it shows how agents get governed gcloud access via MCP.",
+     "llm_error": null,
+     "stars": 4
+    },
+    {
+     "id": "gc2",
+     "source": "",
+     "url": "https://cloud.google.com/blog/products/storage-data-transfer/enabling-end-to-end-checksums",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Enabling Cloud Storage end-to-end checksums for improved data integrity and durability",
+     "kind": null,
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "Cloud Storage can validate CRC32C checksums end to end, from client upload through storage, to detect corruption in transit or at rest.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "niche product",
+     "llm_error": null,
+     "stars": 2
+    },
+    {
+     "id": "gc3",
+     "source": "",
+     "url": "https://cloud.google.com/blog/products/data-analytics/paypals-journey-with-managed-service",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Accelerating analytics: PayPal’s journey with Managed Service for Apache Spark",
+     "kind": null,
+     "content": "",
+     "content_origin": "article",
+     "extra": {},
+     "summary": "PayPal moved Spark workloads to Google's managed Spark service, reporting faster job runtimes and lower operational overhead.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "customer story",
+     "llm_error": null,
+     "stars": 1
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": false,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "ok",
+    "read_fully": 1,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  },
+  {
+   "key": "google_dev_blog",
+   "title": "Google Developers Blog (AI & Cloud)",
+   "url": "https://developers.googleblog.com/feeds/posts/default",
+   "items": [],
+   "filtered_out": 1,
+   "is_release_notes": false,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "empty",
+    "read_fully": 0,
+    "latest_item_date": "2026-09-30",
+    "newest_item_in_feed": "2026-09-30",
+    "error": null
+   }
+  },
+  {
+   "key": "simon_willison",
+   "title": "Simon Willison",
+   "url": "https://simonwillison.net/atom/entries/",
+   "items": [],
+   "filtered_out": 0,
+   "is_release_notes": false,
+   "is_it_news": false,
+   "note": null,
+   "stats": {
+    "status": "empty",
+    "read_fully": 0,
+    "latest_item_date": "2026-09-29",
+    "newest_item_in_feed": "2026-09-29",
+    "error": null
+   }
+  },
+  {
+   "key": "it_news",
+   "title": "IT industry news",
+   "url": "https://www.techmeme.com/river",
+   "items": [
+    {
+     "id": "it1",
+     "source": "",
+     "url": "https://www.theguardian.com/technology/2026/oct/02/openai-disclose-another-hack",
+     "published": null,
+     "day": "2026-10-02",
+     "title": "OpenAI says its AI agent hacked Australia's ... systems during testing",
+     "kind": "big",
+     "content": "",
+     "content_origin": "article",
+     "extra": {
+      "outlets": [
+       "The Guardian",
+       "Reuters"
+      ],
+      "coverage": 2
+     },
+     "summary": "OpenAI disclosed that one of its agents gained unauthorized access to systems during an evaluation and has notified more than 100 affected organizations.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "candidate",
+     "verdict": "read",
+     "reason": "You should read because it is a concrete agent-security incident with disclosure details.",
+     "llm_error": null,
+     "stars": 4
+    },
+    {
+     "id": "it2",
+     "source": "",
+     "url": "https://www.theregister.com/ai-and-ml/2026/10/01/cloudflare-clef",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Cloudflare debuts open-weight multimodal decision models Clef and Clef-flash",
+     "kind": "other",
+     "content": "",
+     "content_origin": "article",
+     "extra": {
+      "outlets": [
+       "The Register"
+      ],
+      "coverage": 1
+     },
+     "summary": "Cloudflare released open-weight decision models based on Qwen3.8-27B and Qwen3.5-9B, claiming better speed and accuracy than Jev for routing decisions.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "summary is enough",
+     "llm_error": null,
+     "stars": 3
+    },
+    {
+     "id": "it5",
+     "source": "",
+     "url": "https://www.bloomberg.com/news/features/2026-10-01/nvidia",
+     "published": null,
+     "day": "2026-10-01",
+     "title": "Nvidia faces questions over China AI chip smuggling cases",
+     "kind": "big",
+     "content": "",
+     "content_origin": "article",
+     "extra": {
+      "outlets": [
+       "Bloomberg"
+      ],
+      "coverage": 1
+     },
+     "summary": "Experts point to gaps in Nvidia's due diligence as more cases of its chips reaching Chinese AI firms despite export controls emerge.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "summary is enough",
+     "llm_error": null,
+     "stars": 3
+    },
+    {
+     "id": "it4",
+     "source": "",
+     "url": "https://siliconangle.com/",
+     "published": null,
+     "day": "2026-10-02",
+     "title": "EU opens consultation on AI Act guidance for general-purpose models",
+     "kind": "europe",
+     "content": "",
+     "content_origin": "article",
+     "extra": {
+      "outlets": [
+       "SiliconANGLE"
+      ],
+      "coverage": 1
+     },
+     "summary": "The European Commission opened a consultation on implementation guidance for general-purpose AI model obligations under the AI Act.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "summary is enough",
+     "llm_error": null,
+     "stars": 3
+    },
+    {
+     "id": "it3",
+     "source": "",
+     "url": "https://www.reuters.com/business/media-telecom/",
+     "published": null,
+     "day": "2026-10-02",
+     "title": "AT&T, T-Mobile and Verizon form satellite JV",
+     "kind": "big",
+     "content": "",
+     "content_origin": "article",
+     "extra": {
+      "outlets": [
+       "Reuters",
+       "Bloomberg"
+      ],
+      "coverage": 2
+     },
+     "summary": "The three US carriers formed a joint venture to expand satellite-to-phone coverage and named a CEO for the new company.",
+     "gen_title": null,
+     "relevant": true,
+     "prescreen": "skip",
+     "verdict": "skip",
+     "reason": "outside interests",
+     "llm_error": null,
+     "stars": 1
+    }
+   ],
+   "filtered_out": 0,
+   "is_release_notes": false,
+   "is_it_news": true,
+   "note": "Moderate news day; 5 stories selected.",
+   "stats": {
+    "status": "ok",
+    "read_fully": 1,
+    "latest_item_date": null,
+    "newest_item_in_feed": null,
+    "error": null
+   }
+  }
+ ],
+ "errors": [],
+ "usage": {
+  "by_model": {
+   "haiku": {
+    "calls": 12,
+    "input_tokens": 5800,
+    "cache_read_tokens": 52000,
+    "cache_creation_tokens": 9000,
+    "output_tokens": 7400,
+    "cost_usd": 0.11,
+    "duration_ms": 90000
+   },
+   "sonnet": {
+    "calls": 2,
+    "input_tokens": 1200,
+    "cache_read_tokens": 6000,
+    "cache_creation_tokens": 5000,
+    "output_tokens": 2100,
+    "cost_usd": 0.09,
+    "duration_ms": 40000
+   }
+  }
+ }
+}

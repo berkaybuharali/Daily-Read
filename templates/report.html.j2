@@ -1,0 +1,132 @@
+{% extends "_base.html.j2" %}
+{% block title %}Daily Read · {{ gen.strftime("%a %-d %b") }}{% endblock %}
+{% block body %}
+<header class="masthead">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">📖</div>
+    <div>
+      <h1>Daily <span>Read</span></h1>
+      <p class="sub">{{ gen.strftime("%A %-d %B") }} · <b>{{ report.window.label }}</b>{% if report.window.days > 1.5 %} ({{ report.window.days | round(0) | int }} days){% endif %}{% if report.mode != "real" %}<span class="mode-tag">{{ report.mode }}</span>{% endif %}</p>
+    </div>
+  </div>
+  <div class="stats">
+    <span class="pill"><strong>{{ total_items }}</strong> items</span>
+    <span class="pill read"><strong>{{ total_read }}</strong> must-read{{ "s" if total_read != 1 }}</span>
+    <span class="pill"><strong>{{ active_sections }}/{{ report.sections | length }}</strong> sources</span>
+    <button class="theme-btn" id="theme-btn" type="button">☾ Dark</button>
+  </div>
+</header>
+
+{% if report.errors %}
+<div class="banner" role="status">⚠ {{ report.errors | length }} issue{{ "s" if report.errors | length > 1 }} this run: {{ report.errors | join(" · ") | truncate(400) }}</div>
+{% endif %}
+
+{% if report.highlights %}
+<section class="highlights" aria-labelledby="hl-title">
+  <div class="hl-head">
+    <h2 id="hl-title">✨ Today in a minute</h2>
+    <p>The {{ report.highlights | length }} things worth knowing</p>
+  </div>
+  <ol class="hl-grid">
+  {% for h in report.highlights %}
+    <li class="hl-card">
+      <span class="hl-num" aria-hidden="true">{{ loop.index }}</span>
+      <div class="hl-body">
+        <p class="hl-text">{{ h.text | codeify }}</p>
+        {% if h.item_ids %}
+        <div class="hl-refs">
+          {% for iid in h.item_ids if iid in item_index %}{% set ref = item_index[iid] %}
+          <a class="hl-ref" href="#i-{{ iid }}" aria-label="Jump to {{ ref.title }}">{{ ref.icon }} {{ ref.title | truncate(38, true, "…") }}</a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </li>
+  {% endfor %}
+  </ol>
+</section>
+{% endif %}
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Filters and sections">
+    <div class="side-card">
+      <p class="side-label">Filter</p>
+      <div class="search">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg>
+        <input type="search" id="q" placeholder="Search…" aria-label="Search titles and summaries" autocomplete="off">
+      </div>
+      <label class="toggle-row" for="only-read"><span>✅ Must-reads only</span><input class="switch" type="checkbox" id="only-read" role="switch"></label>
+      <p class="filter-status" id="filter-status" aria-live="polite" hidden></p>
+    </div>
+    <nav class="side-card side-nav" aria-label="Sections">
+      <p class="side-label">Sections</p>
+      <ul>
+      {% for s in report.sections %}
+        <li><a class="{{ 'empty' if not s['items'] }}" href="#s-{{ s.key }}" data-sec="s-{{ s.key }}"><span class="ico" aria-hidden="true">{{ icons.get(s.key, "•") }}</span><span class="name">{{ shorts.get(s.key, s.title) }}</span>{% if s.stats.read_fully %}<span class="r" aria-label="{{ s.stats.read_fully }} must-read">✅{{ s.stats.read_fully }}</span>{% endif %}<span class="n">{{ s['items'] | length }}</span></a></li>
+      {% endfor %}
+      </ul>
+    </nav>
+  </aside>
+
+  <main>
+  {% for s in report.sections %}
+    {% if s['items'] %}
+    <section class="section{{ ' has-read' if s.stats.read_fully }}" id="s-{{ s.key }}">
+      <details open>
+        <summary>
+          <span class="caret" aria-hidden="true"></span>
+          <span class="sec-ico" aria-hidden="true">{{ icons.get(s.key, "•") }}</span>
+          <h2>{{ s.title }}</h2>
+          <span class="count">{{ s['items'] | length }}</span>
+          {% if s.stats.read_fully %}<span class="count read">✅ {{ s.stats.read_fully }}</span>{% endif %}
+        </summary>
+        {% if s.note %}<p class="note{{ ' warn' if s.stats.status not in ('ok','empty') }}">{{ s.note }}</p>{% endif %}
+        {% if s.filtered_out %}<p class="note">{{ s.filtered_out }} other post{{ "s" if s.filtered_out > 1 }} hidden (not AI/Cloud).</p>{% endif %}
+        <div class="table-wrap">
+        <table class="items">
+          <colgroup><col class="c-title"><col class="c-sum"><col class="c-verdict"><col class="c-link"></colgroup>
+          <thead><tr><th scope="col">Title</th><th scope="col">Summary</th><th scope="col">Read fully?</th><th scope="col"><span class="visually-hidden">Link</span></th></tr></thead>
+          <tbody>
+          {% for i in s['items'] %}{% set title = i.title or i.gen_title or "(untitled)" %}
+            <tr class="item{{ ' is-read' if i.verdict == 'read' }}" id="i-{{ i.id }}">
+              <td class="c-title">
+                <a class="t-title" href="{{ i.url | safe_url }}" target="_blank" rel="noopener">{{ title | codeify }}</a>
+                <div class="meta">
+                  {% if i.kind and not s.is_it_news %}<span class="badge {{ i.kind | lower }}">{{ i.kind }}</span>{% endif %}
+                  {% if s.is_it_news %}{% if i.kind and i.kind != "other" %}<span class="badge prio">{{ prio_labels.get(i.kind, i.kind) }}</span>{% endif %}<span>{{ i.extra.outlets | join(", ") }}{% if i.extra.coverage > 1 %} · {{ i.extra.coverage }} reports{% endif %}</span>{% endif %}
+                  {% if show_dates or s.is_it_news %}<span>{{ i.day | dayfmt }}</span>{% endif %}
+                </div>
+              </td>
+              <td class="summary">{% if i.summary %}{{ i.summary | codeify }}{% else %}<em>Summary unavailable.</em>{% endif %}{% if i.content_origin == "curator_note" %}<span class="origin">Based on the curator's note (article not reachable)</span>{% elif i.content_origin == "feed" and not s.is_it_news and s.key != "simon_willison" %}<span class="origin">Based on the feed excerpt</span>{% endif %}</td>
+              {% set st = i.stars or (4 if i.verdict == "read" else 2) %}
+              <td>{% if i.llm_error %}<div class="verdict skip"><div class="v-top"><span class="v-pill skip">Not rated</span></div><span class="v-why">summary failed — open the link</span></div>{% elif i.verdict == "read" %}<div class="verdict read"><div class="v-top"><span class="v-pill read">✅ Read fully</span>{{ stars(st) }}</div><span class="v-why">{{ i.reason }}</span></div>{% else %}<div class="verdict skip"><div class="v-top"><span class="v-pill skip">Skip</span>{{ stars(st) }}</div><span class="v-why">{{ i.reason or "summary is enough" }}</span></div>{% endif %}</td>
+              <td class="c-link"><a class="link-btn" href="{{ i.url | safe_url }}" target="_blank" rel="noopener" tabindex="-1" aria-label="Open {{ title }} (new tab)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3"/><path d="M11 4h5v5"/><path d="M16 4 9 11"/></svg></a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      </details>
+      <a class="src" href="{{ s.url | safe_url }}" target="_blank" rel="noopener">source ↗</a>
+    </section>
+    {% else %}
+    <section class="section empty" id="s-{{ s.key }}">
+      <div class="row-empty">
+        <span class="sec-ico" aria-hidden="true">{{ icons.get(s.key, "•") }}</span>
+        <h2>{{ s.title }}</h2>
+        <span class="msg">{{ empty_message(s) }}</span>
+      </div>
+    </section>
+    {% endif %}
+  {% endfor %}
+    <p class="no-results">Nothing matches your filter 🫧</p>
+  </main>
+</div>
+
+<footer class="foot">
+  <span>Generated {{ gen.strftime("%a %-d %b %Y, %H:%M") }}</span>
+  <span>Run {{ report.run_id }}</span>
+  <span>{{ usage_line }}</span>
+  <a href="{{ index_href }}">All reports &amp; usage history</a>
+</footer>
+{% endblock %}

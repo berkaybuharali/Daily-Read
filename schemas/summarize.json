@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "relevant": {
+            "type": "boolean"
+          },
+          "prescreen": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "candidate"
+            ]
+          },
+          "skip_reason": {
+            "type": "string"
+          },
+          "depth": {
+            "type": "string",
+            "enum": [
+              "announcement",
+              "release_note",
+              "overview",
+              "how_to",
+              "deep_technical",
+              "research",
+              "opinion",
+              "customer_story",
+              "news"
+            ]
+          },
+          "full_text_adds": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "relevant",
+          "prescreen",
+          "skip_reason",
+          "depth",
+          "full_text_adds"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "additionalProperties": false
+}
