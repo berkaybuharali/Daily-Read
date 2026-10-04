@@ -1,6 +1,77 @@
 {% extends "_base.html.j2" %}
 {% block title %}Daily Read · {{ gen.strftime("%a %-d %b") }}{% endblock %}
+{% block head_extra %}{% if root_rel is not none %}<script src="{{ root_rel }}catalog.js"></script>{% endif %}{% endblock %}
 {% block body %}
+{% macro act_btn(kind, iid, title) %}<button class="act" type="button" data-act="{{ kind }}" data-id="{{ iid }}" aria-pressed="false" aria-label="{{ 'Read Later' if kind == 'later' else 'Favorite' }}: {{ title }}" title="{{ 'Read Later' if kind == 'later' else 'Favorite' }}">{% if kind == "fav" %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>{% endif %}</button>{% endmacro %}
+{% macro lib_panel(kind, heading, blurb, empty_msg) %}
+<section class="tab-panel lib-panel" id="panel-{{ kind }}" role="tabpanel" aria-labelledby="tab-{{ kind }}" hidden>
+  <div class="lib-head">
+    <div>
+      <h2>{{ heading }}</h2>
+      <p class="lib-blurb">{{ blurb }}</p>
+      <p class="lib-count" aria-live="polite"></p>
+    </div>
+    <div class="lib-tools">
+    {% if kind == "later" %}<button type="button" class="add-open" id="add-open" aria-haspopup="dialog"><span aria-hidden="true">＋</span> Add a post from elsewhere</button>{% endif %}
+    <search class="search lib-find" aria-label="Search {{ heading }}">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg>
+      <input type="search" class="lib-search" data-kind="{{ kind }}" placeholder="Search this list…" autocomplete="off">
+    </search>
+    </div>
+  </div>
+  {% if kind == "later" %}
+  <dialog class="add-dialog" id="add-dialog" aria-labelledby="add-title" aria-describedby="add-intro">
+    <form class="add-box" id="add-form" novalidate>
+      <header class="add-top">
+        <span class="add-badge" aria-hidden="true">🔗</span>
+        <h3 id="add-title">Add a post from elsewhere</h3>
+        <button type="button" class="add-close" id="add-close" aria-label="Close">×</button>
+      </header>
+      <p class="add-intro" id="add-intro">Copy the link of a blog post, then click the button. It is read, summarized and rated, and added to Read Later with today's date.</p>
+      <div class="add-body" id="add-body">
+        <button type="button" class="add-paste" id="add-paste">
+          <span class="spinner" aria-hidden="true"></span><span class="add-paste-icon" aria-hidden="true">📋</span><span class="add-paste-label">Paste link &amp; add</span>
+        </button>
+        <p class="add-or"><span>or type or paste it here</span></p>
+        <div class="add-row">
+          <input class="add-input" id="add-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" aria-label="Link to add to Read Later"
+                 aria-describedby="add-status" placeholder="https://medium.com/…">
+          <button class="add-go" id="add-go" type="submit">Add</button>
+        </div>
+      </div>
+      <div class="add-bar" id="add-bar" hidden aria-hidden="true"><span></span></div>
+      <div class="add-result" id="add-result" hidden>
+        <div class="add-result-top"><span class="add-src" id="add-result-source"></span><span class="add-stars" id="add-result-stars"></span><span class="add-verdict" id="add-result-verdict"></span></div>
+        <p class="add-result-title" id="add-result-title"></p>
+        <p class="add-result-summary" id="add-result-summary"></p>
+      </div>
+      <p class="add-status" id="add-status" role="status"></p>
+      <div class="add-actions" id="add-actions" hidden>
+        <button type="button" class="add-again" id="add-again">Add another</button>
+        <button type="button" class="add-done" id="add-done">Done</button>
+      </div>
+    </form>
+  </dialog>
+  {% endif %}
+  <div class="lib-bar">
+    <span class="lib-status" role="status"></span>
+    <button type="button" class="tool-btn btn-link" hidden>Link library file</button>
+    <button type="button" class="tool-btn btn-export">Export</button>
+    <button type="button" class="tool-btn btn-import">Import</button>
+  </div>
+  <div class="section lib-card">
+    <div class="table-wrap">
+      <table class="items lib">
+        <colgroup><col class="c-date"><col class="c-main"><col class="c-source"><col class="c-acts"></colgroup>
+        <thead><tr><th scope="col">Published</th><th scope="col">Title</th><th scope="col">Source</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="lib-empty">{{ empty_msg }}</p>
+    <p class="lib-nomatch" hidden>Nothing in this list matches your search 🫧</p>
+  </div>
+</section>
+{% endmacro %}
 <header class="masthead">
   <div class="brand">
     <div class="logo" aria-hidden="true">📖</div>
@@ -21,6 +92,21 @@
 <div class="banner" role="status">⚠ {{ report.errors | length }} issue{{ "s" if report.errors | length > 1 }} this run: {{ report.errors | join(" · ") | truncate(400) }}</div>
 {% endif %}
 
+<nav class="day-nav" id="day-nav" aria-label="Report navigation" hidden></nav>
+
+<div class="lib-banner" id="lib-banner" hidden>
+  <span class="lib-banner-text"></span>
+  <button type="button" class="tool-btn banner-act" hidden></button>
+  <button type="button" class="banner-x" aria-label="Hide this message for now" title="Hide for now">×</button>
+</div>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab active" type="button" role="tab" id="tab-today" aria-controls="panel-today" aria-selected="true" data-tab="today"><span aria-hidden="true">📖</span> Today</button>
+  <button class="tab" type="button" role="tab" id="tab-later" aria-controls="panel-later" aria-selected="false" tabindex="-1" data-tab="later"><span aria-hidden="true">🔖</span> Read Later <span class="tab-n" id="n-later">{{ lib_counts.later }}</span></button>
+  <button class="tab" type="button" role="tab" id="tab-favorites" aria-controls="panel-favorites" aria-selected="false" tabindex="-1" data-tab="favorites"><span aria-hidden="true">♥</span> Favorites <span class="tab-n" id="n-favorites">{{ lib_counts.favorites }}</span></button>
+</div>
+
+<div class="tab-panel" id="panel-today" role="tabpanel" aria-labelledby="tab-today">
 {% if report.highlights %}
 <section class="highlights" aria-labelledby="hl-title">
   <div class="hl-head">
@@ -51,10 +137,10 @@
   <aside class="sidebar" aria-label="Filters and sections">
     <div class="side-card">
       <p class="side-label">Filter</p>
-      <div class="search">
+      <search class="search" aria-label="Filter this report">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="m14 14 4 4"/></svg>
         <input type="search" id="q" placeholder="Search…" aria-label="Search titles and summaries" autocomplete="off">
-      </div>
+      </search>
       <label class="toggle-row" for="only-read"><span>✅ Must-reads only</span><input class="switch" type="checkbox" id="only-read" role="switch"></label>
       <p class="filter-status" id="filter-status" aria-live="polite" hidden></p>
     </div>
@@ -62,7 +148,7 @@
       <p class="side-label">Sections</p>
       <ul>
       {% for s in report.sections %}
-        <li><a class="{{ 'empty' if not s['items'] }}" href="#s-{{ s.key }}" data-sec="s-{{ s.key }}"><span class="ico" aria-hidden="true">{{ icons.get(s.key, "•") }}</span><span class="name">{{ shorts.get(s.key, s.title) }}</span>{% if s.stats.read_fully %}<span class="r" aria-label="{{ s.stats.read_fully }} must-read">✅{{ s.stats.read_fully }}</span>{% endif %}<span class="n">{{ s['items'] | length }}</span></a></li>
+        <li><a class="{{ 'empty' if not s['items'] }}" href="#s-{{ s.key }}" data-sec="s-{{ s.key }}"><span class="ico" aria-hidden="true">{{ icons.get(s.key, "•") }}</span><span class="name">{{ shorts.get(s.key, s.title) }}</span>{% if s.stats.read_fully %}<span class="r"><span aria-hidden="true">✅</span>{{ s.stats.read_fully }}<span class="visually-hidden"> must-read</span></span>{% endif %}<span class="n">{{ s['items'] | length }}</span></a></li>
       {% endfor %}
       </ul>
     </nav>
@@ -84,7 +170,7 @@
         {% if s.filtered_out %}<p class="note">{{ s.filtered_out }} other post{{ "s" if s.filtered_out > 1 }} hidden (not AI/Cloud).</p>{% endif %}
         <div class="table-wrap">
         <table class="items">
-          <colgroup><col class="c-title"><col class="c-sum"><col class="c-verdict"><col class="c-link"></colgroup>
+          <colgroup><col class="c-title"><col class="c-sum"><col class="c-verdict"><col class="c-actions"></colgroup>
           <thead><tr><th scope="col">Title</th><th scope="col">Summary</th><th scope="col">Read fully?</th><th scope="col"><span class="visually-hidden">Link</span></th></tr></thead>
           <tbody>
           {% for i in s['items'] %}{% set title = i.title or i.gen_title or "(untitled)" %}
@@ -92,22 +178,23 @@
               <td class="c-title">
                 <a class="t-title" href="{{ i.url | safe_url }}" target="_blank" rel="noopener">{{ title | codeify }}</a>
                 <div class="meta">
+                  {% if i.extra.writer %}<span class="writer">{{ i.extra.writer }}</span>{% endif %}
                   {% if i.kind and not s.is_it_news %}<span class="badge {{ i.kind | lower }}">{{ i.kind }}</span>{% endif %}
                   {% if s.is_it_news %}{% if i.kind and i.kind != "other" %}<span class="badge prio">{{ prio_labels.get(i.kind, i.kind) }}</span>{% endif %}<span>{{ i.extra.outlets | join(", ") }}{% if i.extra.coverage > 1 %} · {{ i.extra.coverage }} reports{% endif %}</span>{% endif %}
-                  {% if show_dates or s.is_it_news %}<span>{{ i.day | dayfmt }}</span>{% endif %}
+                  {% if show_dates or s.is_it_news or i.extra.writer %}<span>{{ i.day | dayfmt }}</span>{% endif %}
                 </div>
               </td>
-              <td class="summary">{% if i.summary %}{{ i.summary | codeify }}{% else %}<em>Summary unavailable.</em>{% endif %}{% if i.content_origin == "curator_note" %}<span class="origin">Based on the curator's note (article not reachable)</span>{% elif i.content_origin == "feed" and not s.is_it_news and s.key != "simon_willison" %}<span class="origin">Based on the feed excerpt</span>{% endif %}</td>
+              <td class="summary">{% if i.summary %}{{ i.summary | codeify }}{% else %}<em>Summary unavailable.</em>{% endif %}{% if i.content_origin == "curator_note" %}<span class="origin">Based on the curator's note (article not reachable)</span>{% elif i.content_origin == "feed" and not s.is_it_news and not i.extra.full_text %}<span class="origin">Based on the feed excerpt</span>{% endif %}</td>
               {% set st = i.stars or (4 if i.verdict == "read" else 2) %}
               <td>{% if i.llm_error %}<div class="verdict skip"><div class="v-top"><span class="v-pill skip">Not rated</span></div><span class="v-why">summary failed — open the link</span></div>{% elif i.verdict == "read" %}<div class="verdict read"><div class="v-top"><span class="v-pill read">✅ Read fully</span>{{ stars(st) }}</div><span class="v-why">{{ i.reason }}</span></div>{% else %}<div class="verdict skip"><div class="v-top"><span class="v-pill skip">Skip</span>{{ stars(st) }}</div><span class="v-why">{{ i.reason or "summary is enough" }}</span></div>{% endif %}</td>
-              <td class="c-link"><a class="link-btn" href="{{ i.url | safe_url }}" target="_blank" rel="noopener" tabindex="-1" aria-label="Open {{ title }} (new tab)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3"/><path d="M11 4h5v5"/><path d="M16 4 9 11"/></svg></a></td>
+              <td class="c-link"><div class="acts"><a class="link-btn" href="{{ i.url | safe_url }}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3"/><path d="M11 4h5v5"/><path d="M16 4 9 11"/></svg></a>{{ act_btn("fav", i.id, title) }}{{ act_btn("later", i.id, title) }}</div></td>
             </tr>
           {% endfor %}
           </tbody>
         </table>
         </div>
       </details>
-      <a class="src" href="{{ s.url | safe_url }}" target="_blank" rel="noopener">source ↗</a>
+      {% if s.url %}<a class="src" href="{{ s.url | safe_url }}" target="_blank" rel="noopener">source ↗</a>{% endif %}
     </section>
     {% else %}
     <section class="section empty" id="s-{{ s.key }}">
@@ -122,6 +209,17 @@
     <p class="no-results">Nothing matches your filter 🫧</p>
   </main>
 </div>
+
+</div>
+
+{{ lib_panel("later", "🔖 Read Later", "Articles you saved to read when you have time, newest first. Mark them read when you are done.", "Nothing saved yet. Use the bookmark button on any row in Today to add it here.") }}
+{{ lib_panel("favorites", "♥ Favorites", "Articles you want to keep, newest first.", "No favorites yet. Use the heart button on any row in Today to add it here.") }}
+
+<div class="visually-hidden" id="announce" role="status" aria-live="polite"></div>
+<script type="application/json" id="report-items">{{ items_json | safe }}</script>
+<script type="application/json" id="library-seed">{{ seed_json | safe }}</script>
+<script type="application/json" id="report-meta">{{ {"stem": report_stem, "root": root_rel or ""} | tojson }}</script>
+{% if helper_json %}<script type="application/json" id="library-helper">{{ helper_json | safe }}</script>{% endif %}
 
 <footer class="foot">
   <span>Generated {{ gen.strftime("%a %-d %b %Y, %H:%M") }}</span>

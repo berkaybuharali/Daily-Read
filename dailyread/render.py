@@ -13,6 +13,9 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup, escape
 
 from .config import Config
+from .catalog import report_stem
+from .library import (counts, embed_json, find_report_stems, helper_config, item_snapshots, library_path, load_library,
+                      seed_doc)
 
 PRIO_LABELS = {"gcp": "Google Cloud", "anthropic": "Anthropic", "netherlands": "Netherlands", "europe": "Europe",
                "turkiye": "Türkiye", "big": "Big story"}
@@ -57,7 +60,7 @@ def _assets(cfg: Config) -> dict:
     t = cfg.templates_dir
     return {"fonts_css": (t / "vendor" / "fonts.css").read_text(), "app_css": (t / "report.css").read_text(),
             # "</" would end the inline <script> early
-            "app_js": (t / "report.js").read_text().replace("</", "<\\/")}
+            "app_js": "\n".join((t / n).read_text() for n in ("report.js", "library.js", "nav.js")).replace("</", "<\\/")}
 
 
 def empty_message(section: dict) -> str:
@@ -74,7 +77,24 @@ def order_sections(sections: list[dict]) -> list[dict]:
     return sorted(sections, key=lambda s: not s["items"])
 
 
-def render_report(cfg: Config, report: dict, index_href: str = "index.html") -> str:
+_AUTO = object()
+
+
+def render_report(cfg: Config, report: dict, index_href: str = "index.html", library: dict | None = None,
+                  root_rel: str | None = None, helper: dict | None | object = _AUTO) -> str:
+    """`library`: the saved Read Later / Favorites document (default: state/library.json).
+    `root_rel`: relative path from this file to the reports directory ("" or "../../"); when given, the page loads
+    catalog.js for the prev/next buttons and the Reports menu. `helper`: how the page reaches the auto-save helper
+    (default: from the token in state/, which only `schedule install` creates; pass None for "no helper")."""
+    library = library if library is not None else load_library(library_path(cfg))
+    helper = helper_config(cfg) if helper is _AUTO else helper
+    stem = report_stem(report)
+    missing = {rid for rid, r in library["items"].items() if not r["report"]}
+    if missing:      # saved before items remembered their report: find it in the saved report data
+        found = find_report_stems(missing, cfg.root / "data" / "reports")
+        library = {**library, "items": {rid: ({**r, "report": found[rid]} if rid in found and not r["report"] else r)
+                                        for rid, r in library["items"].items()}}
+    shorts = {s.key: s.short for s in cfg.sections}
     sections = order_sections(report["sections"])
     report = {**report, "sections": sections}
     total_items = sum(len(s["items"]) for s in sections)
@@ -89,7 +109,10 @@ def render_report(cfg: Config, report: dict, index_href: str = "index.html") -> 
         total_items=total_items, total_read=total_read,
         active_sections=sum(1 for s in sections if s["items"]),
         icons={s.key: s.icon for s in cfg.sections},
-        shorts={s.key: s.short for s in cfg.sections},
+        shorts=shorts, lib_counts=counts(library),
+        items_json=embed_json(item_snapshots(sections, shorts, stem)), seed_json=embed_json(seed_doc(library)),
+        report_stem=stem, root_rel=root_rel, helper_json=embed_json(helper) if helper else None,
+        csp_connect=helper["url"] if helper else None,
         item_index={i["id"]: {"title": i.get("title") or i.get("gen_title") or "item",
                               "icon": next((c.icon for c in cfg.sections if c.key == s["key"]), "•")}
                     for s in sections for i in s["items"]},

@@ -1,7 +1,8 @@
-"""Plain RSS/Atom blogs: Google Cloud Blog, Google Developers Blog, Simon Willison."""
+"""Plain RSS/Atom blogs: Google Cloud Blog, Google Developers Blog, and the generic fetcher other sources reuse."""
 from __future__ import annotations
 
 import re
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import feedparser
 
@@ -20,9 +21,16 @@ def _feed_text(e) -> str:
     return html_to_text(html)
 
 
-def _generic(ctx: Context, url_filter: re.Pattern | None, fetch_pages: bool) -> SourceResult:
+def strip_tracking(url: str) -> str:
+    """Drop utm_* query parameters (some feeds add them to every link)."""
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if not k.lower().startswith("utm_")]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
+def _generic(ctx: Context, url_filter: re.Pattern | None, fetch_pages: bool, url: str | None = None) -> SourceResult:
     res = SourceResult(ctx.section.key)
-    feed = feedparser.parse(ctx.http.get_text(ctx.section.url))
+    feed = feedparser.parse(ctx.http.get_text(url or ctx.section.url))
     entries = [(e, parse_any(_entry_date(e))) for e in feed.entries
                if not url_filter or url_filter.match(e.get("link", ""))]
     if not any(dt for _, dt in entries):
@@ -32,9 +40,11 @@ def _generic(ctx: Context, url_filter: re.Pattern | None, fetch_pages: bool) -> 
     for e, published in entries:
         if not ctx.window.contains(published):
             continue
+        raw_link = e.get("link", "")
+        link = strip_tracking(raw_link)
         res.items.append(Item(
-            id=make_id(ctx.section.key, e.get("link", "")),
-            source=ctx.section.key, url=e.get("link", ""), published=published,
+            id=make_id(ctx.section.key, raw_link),             # id from the untouched link: stays stable for feeds with utm_*
+            source=ctx.section.key, url=link, published=published,
             day=local_day(published, ctx.window.tz), title=clean_space(e.get("title", "")),
             content=truncate_words(_feed_text(e), ctx.max_words), content_origin="feed",
         ))
@@ -49,10 +59,6 @@ CLOUD_BLOG = re.compile(r"^https://cloud\.google\.com/blog/")
 
 def fetch_gcloud_blog(ctx: Context) -> SourceResult:
     return _generic(ctx, CLOUD_BLOG, fetch_pages=True)
-
-
-def fetch_simon_willison(ctx: Context) -> SourceResult:
-    return _generic(ctx, None, fetch_pages=False)   # feed already carries the full post
 
 
 DEV_DATE = re.compile(r'"datePublished"\s*:\s*"(\d{4}-\d{2}-\d{2})')

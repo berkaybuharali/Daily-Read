@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.png binary
+templates/vendor/fonts.css linguist-generated
+uv.lock linguist-generated

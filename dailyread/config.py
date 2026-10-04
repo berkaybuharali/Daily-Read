@@ -15,10 +15,11 @@ ROOT = Path(__file__).resolve().parent.parent
 class Section:
     key: str
     title: str
-    url: str
+    url: str = ""                       # "source ↗" link; empty for grouped sections
     extra_urls: tuple[str, ...] = ()
     icon: str = "•"
     short: str = ""
+    writers: tuple[dict, ...] = ()      # grouped section: [{name, url, fetch_pages?}] (independent_writers)
 
 
 @dataclass(frozen=True)
@@ -106,10 +107,11 @@ def load_config(path: Path | None = None, local_path: Path | None = None) -> Con
         Section(
             key=s["key"],
             title=s["title"],
-            url=s["url"],
+            url=s.get("url", ""),
             extra_urls=tuple(s.get("extra_urls", ())),
             icon=s.get("icon", "•"),
             short=s.get("short") or s["title"],
+            writers=tuple(s.get("writers", ())),
         )
         for s in raw["sections"]
         if s.get("enabled", True)          # `enabled: false` skips a source entirely

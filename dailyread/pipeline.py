@@ -13,8 +13,11 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from .catalog import root_rel, write_catalog
+from .fsutil import write_private
 from .config import Config, Section
 from .http import Http, JsonCache, extract_article
+from .library import backup_library, library_path
 from .llm import Claude, LlmError, Usage
 from .models import Item, SourceResult, make_id
 from .render import render_index, render_report
@@ -462,10 +465,7 @@ def run(cfg: Config, opts: RunOptions) -> RunResult:
 
 
 def _atomic_write(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text)
-    tmp.replace(path)
+    write_private(path, text)
 
 
 def _pipeline(cfg: Config, opts: RunOptions, now: datetime, p: dict[str, Path], store: StateStore,
@@ -606,11 +606,16 @@ def _pipeline(cfg: Config, opts: RunOptions, now: datetime, p: dict[str, Path], 
     _atomic_write(data_path, json.dumps(report, ensure_ascii=False, indent=1))
 
     index_path = p["reports"] / "index.html"
-    if not opts.dry_run:
-        archive_previous(p["reports"], p["archive"], keep=f"{today}.html")
+    moved = [] if opts.dry_run else archive_previous(p["reports"], p["archive"], keep=f"{today}.html")
     report_path = p["reports"] / f"{stamp}.html"
     # absolute link: still works after the report is moved into archive/<YYYY>/
-    _atomic_write(report_path, render_report(cfg, report, index_href=index_path.as_uri()))
+    _atomic_write(report_path, render_report(cfg, report, index_href=index_path.as_uri(), root_rel=""))
+    for step in (lambda: write_catalog(p["reports"], p["data"]),     # prev/next buttons + Reports menu know the new report
+                 lambda: rerender_moved(cfg, p, moved)):               # moved reports need their new path to catalog.js
+        try:
+            step()
+        except Exception as e:                  # navigation is a convenience: it must never fail a finished report
+            log.warning("report navigation update failed: %s", e)
 
     store.append_run(record)
     if not opts.dry_run:
@@ -624,6 +629,10 @@ def _pipeline(cfg: Config, opts: RunOptions, now: datetime, p: dict[str, Path], 
             "last_error": None,
         })
         store.add_seen([i.id for r in results.values() for i in r.items] + [i.id for i in it_items], today)
+        try:
+            backup_library(library_path(cfg), today)
+        except OSError as e:
+            log.warning("library backup failed: %s", e)
     store.update_sources({s["key"]: s["stats"] for s in sections}, now, window)
     _atomic_write(index_path, render_index(cfg, p["reports"], store, dry_run=opts.dry_run))
 
@@ -650,14 +659,31 @@ def _record(run_id, opts, window, now, t_start, sections, usage: Usage, errors, 
     }
 
 
-def archive_previous(reports_dir: Path, archive_dir: Path, keep: str) -> None:
-    """Move every dated report except today's into archive/<YYYY>/."""
+def archive_previous(reports_dir: Path, archive_dir: Path, keep: str) -> list[Path]:
+    """Move every dated report except today's into archive/<YYYY>/. Returns the new locations."""
+    moved = []
     for f in reports_dir.glob("????-??-??.html"):
         if f.name == keep:
             continue
         dest = archive_dir / f.name[:4]
         dest.mkdir(parents=True, exist_ok=True)
         shutil.move(str(f), dest / f.name)
+        moved.append(dest / f.name)
+    return moved
+
+
+def rerender_moved(cfg: Config, p: dict[str, Path], moved: list[Path]) -> None:
+    """Re-render archived reports from their saved data (no Claude call) so their links to the catalog still work."""
+    for f in moved:
+        data = p["data"] / f"{f.stem}.json"
+        if not data.exists():
+            log.warning("no saved data for %s: its prev/next buttons will not work until `render --all`", f.name)
+            continue
+        try:
+            _atomic_write(f, render_report(cfg, json.loads(data.read_text()), index_href=(p["reports"] / "index.html").as_uri(),
+                                           root_rel=root_rel(f, p["reports"])))
+        except (OSError, ValueError, KeyError) as e:
+            log.warning("could not re-render %s (%s): its navigation may be stale until `render --all`", f.name, e)
 
 
 def open_in_browser(cfg: Config, path: Path) -> None:

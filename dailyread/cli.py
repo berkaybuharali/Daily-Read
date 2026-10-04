@@ -19,6 +19,8 @@ from pathlib import Path
 
 from .config import load_config
 from .pipeline import RunFailed, RunOptions, open_in_browser, paths, run
+from .catalog import report_files, root_rel, write_catalog
+from .fsutil import write_private
 from .render import render_index, render_report
 from .state import LockedError, StateStore
 
@@ -50,13 +52,19 @@ def main(argv: list[str] | None = None) -> int:
     m = sub.add_parser("mockup", help="render the design with sample data")
     m.add_argument("--no-open", action="store_true")
     rr = sub.add_parser("render", help="re-render a saved report JSON")
-    rr.add_argument("data", type=Path)
+    rr.add_argument("data", type=Path, nargs="?", help="the report JSON in data/ (omit with --all)")
+    rr.add_argument("--all", action="store_true", help="re-render every saved report (e.g. after a template change)")
+    rr.add_argument("--dry-run", action="store_true", help="with --all: the dry-run reports instead of the real ones")
     rr.add_argument("--no-open", action="store_true")
     u = sub.add_parser("usage", help="print token usage history")
     u.add_argument("--dry-run", action="store_true")
     sc = sub.add_parser("schedule", help="daily automation via launchd")
     sc.add_argument("action", choices=["install", "uninstall", "status"])
     sub.add_parser("scheduled", help="one launchd tick (used by the LaunchAgent)")
+    lb = sub.add_parser("library", help="Read Later / Favorites helper (normally started by the LaunchAgent)")
+    lb.add_argument("action", choices=["status", "serve"])
+    lb.add_argument("--port", type=int, help="serve: listen on this port yourself (testing); default: launchd's socket")
+    lb.add_argument("--idle-minutes", type=float, help="serve: exit after this many idle minutes")
     args = ap.parse_args(argv)
 
     cfg = load_config()
@@ -67,13 +75,33 @@ def main(argv: list[str] | None = None) -> int:
         report["generated_at"] = datetime.now(cfg.tz).isoformat()
         out = cfg.root / "reports" / "mockup.html"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(render_report(cfg, report))
+        write_private(out, render_report(cfg, report))
         print(out)
         if not args.no_open:
             open_in_browser(cfg, out)
         return 0
 
     if args.cmd == "render":
+        if args.all:
+            p = paths(cfg, args.dry_run)
+            done = skipped = 0
+            for f in report_files(p["reports"]):
+                data = p["data"] / f"{f.stem}.json"
+                if not data.exists():
+                    skipped += 1
+                    continue
+                try:
+                    write_private(f, render_report(cfg, json.loads(data.read_text()), index_href=(p["reports"] / "index.html").as_uri(),
+                                                   root_rel=root_rel(f, p["reports"])))
+                    done += 1
+                except (OSError, ValueError, KeyError) as e:
+                    skipped += 1
+                    print(f"skipped {f.name}: {e}", file=sys.stderr)
+            write_catalog(p["reports"], p["data"])
+            print(f"re-rendered {done} report(s) in {p['reports']}" + (f", skipped {skipped}" if skipped else ""))
+            return 0
+        if not args.data:
+            ap.error("render needs a data file or --all")
         report = json.loads(args.data.read_text())
         dry = report.get("mode") != "real"
         p = paths(cfg, dry)
@@ -82,7 +110,8 @@ def main(argv: list[str] | None = None) -> int:
         out = archived if not dry and archived.exists() else p["reports"] / name
         out.parent.mkdir(parents=True, exist_ok=True)
         index = p["reports"] / "index.html"
-        out.write_text(render_report(cfg, report, index_href=index.as_uri()))
+        write_private(out, render_report(cfg, report, index_href=index.as_uri(), root_rel=root_rel(out, p["reports"])))
+        write_catalog(p["reports"], p["data"])
         index.write_text(render_index(cfg, p["reports"], StateStore(p["state"]), dry))
         print(out)
         if not args.no_open:
@@ -96,6 +125,23 @@ def main(argv: list[str] | None = None) -> int:
         except RuntimeError as e:
             print(f"error: {e}", file=sys.stderr)
             return 1
+        return 0
+
+    if args.cmd == "library":
+        from . import library, library_helper
+        if args.action == "serve":
+            idle = args.idle_minutes or library.helper_settings(cfg)["helper_idle_minutes"]
+            token = library.read_token(library.token_path(cfg))
+            if token is None:
+                print("no helper token: run `bin/dailyread schedule install` first", file=sys.stderr)
+                return 1
+            library_helper.serve(library.library_path(cfg), token, idle, args.port,
+                                 None if args.port else library_helper.inherited_socket())
+            return 0
+        doc = library.load_library(library.library_path(cfg))
+        saved = sum(1 for r in doc["items"].values() if r["read_later"] or r["favorite"])
+        print(f"library file: {library.library_path(cfg)} ({saved} saved item(s))\nhelper token: "
+              f"{'present' if library.helper_config(cfg) else 'missing, run `bin/dailyread schedule install`'}")
         return 0
 
     if args.cmd == "scheduled":

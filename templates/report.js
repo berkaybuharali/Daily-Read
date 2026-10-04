@@ -10,7 +10,10 @@
   var mode = store.get("dr-theme");
   if (modes.indexOf(mode) < 0) mode = "dark";
   function applyTheme() {
+    root.classList.add("no-anim");                       // switch themes instantly: no half-faded buttons
     root.setAttribute("data-theme", mode);
+    if (window.requestAnimationFrame) requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.remove("no-anim"); }); });
+    else root.classList.remove("no-anim");
     var btn = document.getElementById("theme-btn");
     if (btn) { btn.textContent = labels[mode]; btn.setAttribute("aria-label", "Theme: " + mode + ". Click to change."); }
   }

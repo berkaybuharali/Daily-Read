@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "readable": {
+      "type": "boolean"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "source": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "stars": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "read",
+        "skip"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 140
+    }
+  },
+  "required": [
+    "readable",
+    "title",
+    "source",
+    "summary",
+    "stars",
+    "verdict",
+    "reason"
+  ],
+  "additionalProperties": false
+}

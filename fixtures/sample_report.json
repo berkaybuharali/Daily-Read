@@ -64,7 +64,7 @@
     {
      "id": "se2",
      "source": "",
-     "url": "https://medium.com/google-cloud/create-an-agent-that-remembers",
+     "url": "https://example.com/posts/create-an-agent-that-remembers",
      "published": null,
      "day": "2026-10-02",
      "title": "Create an Agent that Remembers with Agent Platform Memory Bank",
@@ -520,7 +520,7 @@
     {
      "id": "it1",
      "source": "",
-     "url": "https://www.theguardian.com/technology/2026/oct/02/openai-disclose-another-hack",
+     "url": "https://example.com/news/disclose-another-hack",
      "published": null,
      "day": "2026-10-02",
      "title": "OpenAI says its AI agent hacked Australia's ... systems during testing",
@@ -546,7 +546,7 @@
     {
      "id": "it2",
      "source": "",
-     "url": "https://www.theregister.com/ai-and-ml/2026/10/01/cloudflare-clef",
+     "url": "https://example.com/news/cloudflare-clef",
      "published": null,
      "day": "2026-10-01",
      "title": "Cloudflare debuts open-weight multimodal decision models Clef and Clef-flash",
@@ -571,7 +571,7 @@
     {
      "id": "it5",
      "source": "",
-     "url": "https://www.bloomberg.com/news/features/2026-10-01/nvidia",
+     "url": "https://example.com/news/nvidia",
      "published": null,
      "day": "2026-10-01",
      "title": "Nvidia faces questions over China AI chip smuggling cases",
@@ -596,7 +596,7 @@
     {
      "id": "it4",
      "source": "",
-     "url": "https://siliconangle.com/",
+     "url": "https://example.com/news/",
      "published": null,
      "day": "2026-10-02",
      "title": "EU opens consultation on AI Act guidance for general-purpose models",
@@ -621,7 +621,7 @@
     {
      "id": "it3",
      "source": "",
-     "url": "https://www.reuters.com/business/media-telecom/",
+     "url": "https://example.com/news/media-telecom",
      "published": null,
      "day": "2026-10-02",
      "title": "AT&T, T-Mobile and Verizon form satellite JV",

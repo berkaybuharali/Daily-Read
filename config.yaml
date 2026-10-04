@@ -26,13 +26,28 @@ claude:
     it_summarize: sonnet   # S3c: summarize the picked stories
     review: sonnet         # S4: overall review: 1-5 stars for every item, verdicts, highlights
     shorten: sonnet        # fix pass for summaries failing the lint (too long, filler opener, hype)
-  thinking:                # extended thinking per stage (CLI default is ON; it multiplies Haiku output/time ~5x)
-    summarize: false
-    it_prefilter: false
-    it_pick: true
-    it_summarize: false
-    review: true
-    shorten: false
+    add_link: sonnet       # "Add a link" in Read Later: summarize + rate one page you pasted
+  effort:                  # `claude --effort` per stage (low|medium|high|xhigh|max). Sonnet 5.5 always thinks adaptively and
+    summarize: low         # cannot turn thinking off, so effort is the cost/latency knob. Judgement stages get more.
+    it_prefilter: low
+    it_pick: medium
+    it_summarize: low
+    review: high
+    shorten: low
+    add_link: medium
+  # thinking:              # only for models with manual extended thinking (Haiku 4.5): stage: true|false -> alwaysThinkingEnabled
+
+library:                   # Read Later / Favorites auto-save helper (enabled by `bin/dailyread schedule install`)
+  port: 47821              # 127.0.0.1 only
+  helper_idle_minutes: 3   # the helper exits after this long without a request; launchd restarts it on the next click
+
+add_link:                  # Read Later -> "Add a link" (handled by the helper; needs `schedule install`)
+  max_words: 1500          # article text sent to Claude
+  min_words: 150           # fewer words than this = not a readable article (login wall, bot check, video page)
+  fetch_timeout: 15        # seconds for the plain page fetch
+  chrome_timeout: 35       # seconds for the headless-Chrome fallback (sites that block scripts, e.g. Medium)
+  chrome: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  claude_timeout: 120      # seconds for the summary call
 
 http:
   user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36"
@@ -103,12 +118,34 @@ sections:
     short: "Developers Blog"
     icon: "🛠️"
     url: https://developers.googleblog.com/feeds/posts/default
-  - key: simon_willison
+  - key: sre_weekly
     enabled: true
-    title: Simon Willison
-    short: "Simon Willison"
-    icon: "🧠"
-    url: https://simonwillison.net/atom/entries/
+    title: SRE Weekly
+    short: "SRE Weekly"
+    icon: "🚨"
+    url: https://sreweekly.com/feed/
+  - key: independent_writers
+    enabled: true
+    title: Independent writers
+    short: "Writers"
+    icon: "✍️"
+    # Individual bloggers who post now and then, kept together (report order = list order). Add a person with
+    # name + feed URL; `fetch_pages: true` when the feed only has an excerpt.
+    writers:
+      - {name: "Simon Willison", url: "https://simonwillison.net/atom/entries/"}
+      - {name: "Joe Shirey", url: "https://www.joe-shirey.com/feed.xml"}
+      - {name: "Marc Brooker", url: "https://brooker.co.za/blog/rss.xml"}
+      - {name: "Martin Alderson", url: "https://martinalderson.com/feed.xml"}
+      - {name: "Max Woolf", url: "https://minimaxir.com/index.xml"}
+      - {name: "Martin Fowler", url: "https://martinfowler.com/feed.atom", fetch_pages: true}
+      - {name: "Gregor Hohpe", url: "https://architectelevator.com/feed.xml", fetch_pages: true}
+      - {name: "Kent Beck", url: "https://tidyfirst.substack.com/feed", fetch_pages: true}
+      - {name: "Mark Callaghan", url: "https://smalldatum.blogspot.com/feeds/posts/default"}
+      - {name: "Dan Luu", url: "https://danluu.com/atom.xml"}
+      - {name: "Lorin Hochstein", url: "https://surfingcomplexity.blog/feed"}
+      - {name: "Murat Demirbas", url: "https://muratbuffalo.blogspot.com/feeds/posts/default"}
+      - {name: "Matt Rickard", url: "https://blog.matt-rickard.com/feed"}
+      - {name: "Alex Ewerlöf", url: "https://blog.alexewerlof.com/feed"}
   - key: it_news
     enabled: true
     title: IT industry news

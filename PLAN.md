@@ -1,5 +1,8 @@
 # Daily Read — Plan
 
+> **Historical design record.** This is the original plan, kept for the reasoning behind the decisions. The living
+> documentation is [README.md](README.md) (users) and [CLAUDE.md](CLAUDE.md) (maintainers); where they differ, they win.
+
 Status: **PHASE 1 + PHASE 2 BUILT** (2026-10-02). Automation: launchd LaunchAgent installed via `bin/dailyread schedule install`.
 Last updated: 2026-10-02 (rev 7)
 
@@ -61,7 +64,7 @@ summaries and a strict "read fully?" verdict, and picks the most important IT-in
 | 7 | BigQuery release notes | RSS `https://docs.cloud.google.com/feeds/bigquery-release-notes.xml` | each note item | 50+ d |
 | 8 | Google Cloud Blog | RSS `https://cloudblog.withgoogle.com/rss/` (drop job postings) | each post | ~6 d |
 | 9 | Google Developers Blog — AI & Cloud only | RSS `https://developers.googleblog.com/feeds/posts/default` (no dates in feed → date from article page) | each post | 50 items |
-| 10 | Simon Willison — long-form only | Atom `https://simonwillison.net/atom/entries/` | each post | 50+ d |
+| 10 | Simon Willison — long-form only (now one of the `independent_writers` group) | Atom `https://simonwillison.net/atom/entries/` | each post | 50+ d |
 | 11 | IT industry news — top 5–10 | Techmeme `https://www.techmeme.com/river` (HTML, ~5 d) + SiliconANGLE `https://siliconangle.com/feed/` + TechCrunch `/category/artificial-intelligence/feed/` + `/category/fundraising/feed/` | each selected story | 1–5 d (best effort) |
 
 All verified returning current content on 2026-10-02.
@@ -70,7 +73,7 @@ All verified returning current content on 2026-10-02.
 
 Current design (measured 2026-10-02). Stage → model and thinking settings live in `config.yaml`.
 
-```
+```text
 S1  FETCH + PARSE (Python, ≤16 parallel HTTP requests, 5 retries + curl fallback)
     every enabled source (public + local_sources/ plugins) → individual items → filter to the source's own
     window (covered_until → now) → drop already-seen → article text (≤1,200 words) where the feed has excerpts only
@@ -92,7 +95,7 @@ S4  REVIEW — Sonnet (thinking), one call over every item
     budget ≈3 per day of window, hard cap budget+2 (pipeline.read_limits); 3–4 highlights
 S5  RENDER — Jinja2 (autoescape, fonts/CSS inlined) → HTML; sections sorted by config order, empty ones last
 S6  PERSIST — real runs only when complete: state.json, seen.json, sources.json, runs.jsonl, archive
-```
+```text
 
 - Why Sonnet everywhere: in a 10-item comparison Sonnet (no thinking) took 10s with 0/10 summaries over 300 chars;
   Haiku (no thinking) took 17s with 5/10 over; Haiku (thinking) 169s. The IT pre-filter was 14s on Sonnet vs 64s
@@ -121,7 +124,7 @@ Every call is logged per stage in `state/runs.jsonl`; `bin/dailyread usage` show
 
 ### `claude -p` lockdown (every call)
 
-```
+```text
 claude -p --model <sonnet|haiku> \
   --tools "" \                     # no built-in tools (no Bash/Read/Write/Web)
   --strict-mcp-config \            # no MCP servers
@@ -130,7 +133,7 @@ claude -p --model <sonnet|haiku> \
   --output-format json --json-schema <stage schema> \
   --system-prompt-file <assembled prompt files> \
   --settings {"alwaysThinkingEnabled": <per stage>}  < input.json
-```
+```text
 The model only reads stdin and returns schema-validated JSON. Web text goes only in the stdin `<data>` payload,
 after `prompts/untrusted_input.md`. `--bare` is not used (it may skip subscription auth).
 
@@ -163,13 +166,13 @@ Key rules (details in the files):
 
 ## 6. Output & design
 
-```
+```text
 reports/
   2026-10-05.html            latest report only
   index.html                 list of all reports: window, item count, ✅ count
   archive/2026/
     2026-10-02.html          previous reports (moved here on each new run)
-```
+```text
 
 **Design goals: looks good, easy to scan in 2 minutes, fully self-contained (inline CSS + small inline JS, no CDN).**
 
@@ -206,7 +209,7 @@ Phase 1 dry-run writes to `state-dryrun/` instead, so the real state is never to
   "failed_attempts_today": 0,
   "last_error": null
 }
-```
+```text
 
 **`state/sources.json` — per-source health & stats (updated every run)**
 ```json
@@ -228,7 +231,7 @@ Phase 1 dry-run writes to `state-dryrun/` instead, so the real state is never to
     "last_error": null
   }
 }
-```
+```text
 
 **`state/runs.jsonl` — one line per run (history)**
 - run id, start/end, window, mode (manual / scheduled / dry-run), success/failure
@@ -237,11 +240,11 @@ Phase 1 dry-run writes to `state-dryrun/` instead, so the real state is never to
 - totals: items, ✅, Claude calls, tokens per model, total duration
 
 **Other**
-```
+```text
 state/seen.json      IDs of every item already reported (+ first-seen date) → no duplicates
 state/run.lock/      directory lock → prevents two runs at the same time
 state/items/         (Phase 2, optional) collector store for short-history feeds
-```
+```text
 
 The report index page (`reports/index.html`) also gets a small **"Sources health"** table from
 `sources.json`: last fetch status, newest item date, items this run — so a broken parser is visible.
@@ -278,7 +281,7 @@ Build notes:
 - python.org Python 3.13 has no SSL root certs configured (CERTIFICATE_VERIFY_FAILED) → uv venv + certifi.
 - Full Chrome User-Agent string for all HTTP requests (some sites 403 a bare `Mozilla/5.0`).
 - Techmeme timestamps `-0400` → normalize to Amsterdam.
-- Hacker News blocked on the current network by a local DNS filter → not used.
+- Hacker News unreachable from the author's network → not used.
 
 ## 11. Research log
 

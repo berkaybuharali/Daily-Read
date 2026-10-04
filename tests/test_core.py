@@ -204,11 +204,11 @@ def test_failed_source_keeps_old_covered_until(tmp_path):
 
 
 def test_disabled_source_not_loaded(tmp_path):
-    raw = (CFG.root / "config.yaml").read_text().replace("  - key: simon_willison\n    enabled: true",
-                                                          "  - key: simon_willison\n    enabled: false")
+    raw = (CFG.root / "config.yaml").read_text().replace("  - key: gcloud_blog\n    enabled: true",
+                                                          "  - key: gcloud_blog\n    enabled: false")
     p = tmp_path / "c.yaml"
     p.write_text(raw)
-    assert "simon_willison" not in [s.key for s in load_config(p).sections]
+    assert "gcloud_blog" not in [s.key for s in load_config(p).sections]
 
 
 def test_real_window_capped_after_long_break(tmp_path):
@@ -305,10 +305,23 @@ def test_schedule_skip_reasons():
 def test_schedule_plist_uses_claude_config_dir():
     from dailyread.schedule import build_plist
     p = build_plist(CFG, env={"CLAUDE_CONFIG_DIR": "/x/.claude-work"})
-    assert p["ProgramArguments"][-1] == "scheduled" and p["RunAtLoad"] is True
+    assert p["ProgramArguments"][-2:] == ["-m", "dailyread.agent_main"] and p["RunAtLoad"] is True
+    # launchd hands its socket only to the job's own process: python must be started directly, never through uv
+    assert not any("uv" in Path(a).name or a.endswith("bin/dailyread") for a in p["ProgramArguments"])
     assert p["StartInterval"] == 30 * 60
     assert p["EnvironmentVariables"]["CLAUDE_CONFIG_DIR"] == "/x/.claude-work"
     assert "CLAUDE_CONFIG_DIR" not in build_plist(CFG, env={})["EnvironmentVariables"]
+
+
+def test_schedule_plist_also_holds_the_localhost_port_for_the_library_helper():
+    from dailyread.schedule import build_plist
+    p = build_plist(CFG, env={})
+    listener = p["Sockets"]["Listener"]
+    assert listener["SockNodeName"] == "127.0.0.1" and listener["SockServiceName"] == "47821"
+    assert "KeepAlive" not in p                      # nothing may stay running between timer ticks and clicks
+    assert p["ThrottleInterval"] == 5 and p["ProcessType"] == "Background"
+    assert p["StartCalendarInterval"] == [{"Hour": 7, "Minute": 5}, {"Hour": 12, "Minute": 0}]   # wake safety net
+    assert "Sockets" not in build_plist(CFG, env={}, helper=False)
 
 
 def test_scheduler_usage_limit_does_not_burn_attempt(tmp_path, monkeypatch):
@@ -337,3 +350,32 @@ def test_scheduler_usage_limit_does_not_burn_attempt(tmp_path, monkeypatch):
     assert store.state()["failed_attempts_today"] == 3 and len(notes) == 1
     schedule.tick(CFG, now)                     # gave up: no 4th attempt
     assert store.state()["failed_attempts_today"] == 3
+
+
+def test_sre_weekly_parse_issue_skips_sponsor_and_extracts_rows():
+    from dailyread.sources.sre_weekly import parse_issue
+    html = """
+    <div class="sreweekly-sponsor-message"><p>A message from our sponsor <a href="https://x/ad">Ad</a></p></div>
+    <div class="sreweekly-entry"><div class="sreweekly-title"><a href="https://a.example/p1">Post one</a></div>
+      <div class="sreweekly-description"><blockquote><p>Why it broke.</p></blockquote>
+      <p><small>Jane Doe — Example</small></p></div></div>
+    <div class="sreweekly-entry"><div class="sreweekly-title"><a href="https://b.example/p2">Post two</a></div>
+      <div class="sreweekly-description"><p>Notes.</p></div></div>
+    """
+    rows = parse_issue(html)
+    assert [r["url"] for r in rows] == ["https://a.example/p1", "https://b.example/p2"]
+    assert rows[0]["note"] == "Why it broke." and rows[0]["byline"] == "Jane Doe — Example"
+    assert rows[1]["byline"] == ""
+
+
+def test_claude_env_drops_api_key_and_effort_override(monkeypatch):
+    import importlib
+    from dailyread import llm
+    for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_EFFORT_LEVEL"):
+        monkeypatch.setenv(k, "x")
+    llm = importlib.reload(llm)
+    try:
+        assert not {"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_EFFORT_LEVEL"} & set(llm.CLAUDE_ENV)
+    finally:
+        monkeypatch.undo()
+        importlib.reload(llm)

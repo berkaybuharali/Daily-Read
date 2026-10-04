@@ -26,3 +26,5 @@ CLAUDE.local.md
 local_sources/*
 !local_sources/README.md
 !local_sources/example_source.py
+*.damaged-*
+library-backups/

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..models import SourceResult
-from . import anthropic_blogs, blog_feeds, claude_code, claude_platform, gcp_release_notes, it_news
+from . import anthropic_blogs, blog_feeds, claude_code, claude_platform, gcp_release_notes, independent_writers, it_news, sre_weekly
 from .base import Context
 
 log = logging.getLogger(__name__)
@@ -29,7 +29,8 @@ FETCHERS: dict[str, Callable[[Context], SourceResult]] = {
     "bigquery_rn": gcp_release_notes.fetch,
     "gcloud_blog": blog_feeds.fetch_gcloud_blog,
     "google_dev_blog": blog_feeds.fetch_google_dev_blog,
-    "simon_willison": blog_feeds.fetch_simon_willison,
+    "sre_weekly": sre_weekly.fetch,
+    "independent_writers": independent_writers.fetch,
     "it_news": it_news.fetch,
 }
 

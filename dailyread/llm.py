@@ -4,6 +4,7 @@ Every call is recorded (stage, model, tokens, cost-equivalent, duration) for run
 from __future__ import annotations
 
 import json
+import os
 import logging
 import re
 import subprocess
@@ -83,6 +84,14 @@ class Usage:
         return [asdict(c) for c in self.calls]
 
 
+# An unattended job needs no telemetry, auto-update or feedback traffic.
+# CLAUDE_CODE_EFFORT_LEVEL would override --effort; an API key / token would make `claude -p` bill that key instead of
+# using the subscription login.
+_DROP_ENV = {"CLAUDE_CODE_EFFORT_LEVEL", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"}
+CLAUDE_ENV = {**{k: v for k, v in os.environ.items() if k not in _DROP_ENV},
+              "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"}
+
+
 class Claude:
     def __init__(self, cfg: Config, usage: Usage):
         self.cfg, self.usage = cfg, usage
@@ -133,8 +142,13 @@ class Claude:
             "--output-format", "json",
             "--json-schema", json.dumps(schema),
             "--system-prompt-file", sp_path,
-            "--settings", json.dumps({"alwaysThinkingEnabled": bool(self.cfg.claude.get("thinking", {}).get(stage, False))}),
         ]
+        effort = self.cfg.claude.get("effort", {}).get(stage)      # Sonnet/Opus/Fable think adaptively: effort is the knob
+        if effort:
+            cmd += ["--effort", str(effort)]
+        thinking = self.cfg.claude.get("thinking", {}).get(stage)  # only models with manual extended thinking (Haiku)
+        if thinking is not None:
+            cmd += ["--settings", json.dumps({"alwaysThinkingEnabled": bool(thinking)})]
         retries = self.cfg.claude.get("retries", 2) if retries is None else retries
         busy_ms = 0                              # time spent in claude calls, excluding queueing for a slot
         last_err = "unknown"
@@ -145,7 +159,7 @@ class Claude:
                 with self.sem:
                     t0 = time.monotonic()
                     try:
-                        p = subprocess.run(cmd, input=user_msg, capture_output=True, text=True,
+                        p = subprocess.run(cmd, input=user_msg, capture_output=True, text=True, env=CLAUDE_ENV,
                                            timeout=timeout or self.cfg.claude["timeout_seconds"], cwd=self.cfg.root)
                     except subprocess.TimeoutExpired:
                         last_err = "timeout"
