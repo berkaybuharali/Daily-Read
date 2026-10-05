@@ -15,6 +15,14 @@ test("cleanRecord validates like the Python loader", () => {
   assert.equal(L.cleanRecord(snap("a", { title: "t".repeat(999) })).title.length, 300);
 });
 
+test("cleanRecord validates the reading time like the Python loader", () => {
+  const r = L.cleanRecord(snap("a", { minutes: 7, minutes_est: true }));
+  assert.equal(r.minutes, 7); assert.equal(r.minutes_est, true);
+  for (const bad of [-1, 1000, 2.5, true, "7", null]) assert.equal(L.cleanRecord(snap("a", { minutes: bad })).minutes, 0);
+  assert.equal(L.cleanRecord(snap("a", { minutes_est: "yes" })).minutes_est, false);
+  assert.equal(L.cleanRecord(snap("a")).minutes_est, false);
+});
+
 test("setFlag saves from a snapshot, sets timestamps, and does not mutate the old map", () => {
   const before = {};
   const m = L.setFlag(before, "a", snap("a"), "read_later", true, T1);

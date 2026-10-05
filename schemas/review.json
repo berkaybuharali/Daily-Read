@@ -23,13 +23,19 @@
           },
           "reason": {
             "type": "string"
+          },
+          "read_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120
           }
         },
         "required": [
           "id",
           "stars",
           "verdict",
-          "reason"
+          "reason",
+          "read_minutes"
         ],
         "additionalProperties": false
       }

@@ -39,6 +39,19 @@ def stars(n: int | None) -> Markup:
                   f'{"★" * n}<span class="off">{"★" * (5 - n)}</span></span>')
 
 
+CLOCK_SVG = ('<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '
+             'aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.8V8l2.2 1.4"/></svg>')
+
+
+def read_time(minutes: int | None, estimated: bool = False) -> Markup:
+    """"7 min" (counted from the article) or "~7 min" (estimated by the review), shown next to the stars."""
+    if not minutes:
+        return Markup("")
+    n = int(minutes)
+    label = f"About {n} minute{'s' if n != 1 else ''} to read" + (" (estimated)" if estimated else "")
+    return Markup(f'<span class="rt" title="{label}">{CLOCK_SVG}{"~" if estimated else ""}{n} min</span>')
+
+
 def dayfmt(value) -> str:
     d = date.fromisoformat(value) if isinstance(value, str) else value
     return f"{d:%a %-d %b}"
@@ -116,7 +129,7 @@ def render_report(cfg: Config, report: dict, index_href: str = "index.html", lib
         item_index={i["id"]: {"title": i.get("title") or i.get("gen_title") or "item",
                               "icon": next((c.icon for c in cfg.sections if c.key == s["key"]), "•")}
                     for s in sections for i in s["items"]},
-        index_href=index_href, stars=stars,
+        index_href=index_href, stars=stars, read_time=read_time,
         show_dates=len(days) > 1, prio_labels=PRIO_LABELS, empty_message=empty_message, usage_line=usage_line,
         **_assets(cfg),
     )

@@ -2,9 +2,28 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime
 from typing import Any
+
+
+WORDS_PER_MINUTE = 265                  # Medium's reading speed, so times match what the reader sees there
+TRUNCATED = re.compile(r"\[…truncated(?:: (\d+) words in full)?\]\s*$")    # http.truncate_words; old data has no count
+
+
+def full_words(text: str) -> int | None:
+    """Length of the whole text, also when it was cut to a word limit (the marker keeps the full count).
+    None when it was cut by an older version whose marker has no count: the length is unknown."""
+    m = TRUNCATED.search(text)
+    if m:
+        return int(m.group(1)) if m.group(1) else None
+    return len(text.split())
+
+
+def reading_minutes(words: int) -> int:
+    """Capped: the count can come from untrusted text (a feed post could end with a fake truncation marker)."""
+    return min(999, max(1, round(words / WORDS_PER_MINUTE)))
 
 
 def make_id(*parts: str) -> str:
@@ -30,6 +49,8 @@ class Item:
     depth: str | None = None            # announcement | release_note | how_to | deep_technical | research | ...
     full_text_adds: str | None = None   # what the full piece offers beyond the summary
     stars: int | None = None            # 1-5 from the final review; 4-5 <=> verdict "read"
+    read_minutes: int | None = None     # reading time of the full piece (None for release notes)
+    minutes_estimated: bool = False     # True: guessed by the review model (only an excerpt/note/headline was fetched)
     summary: str | None = None
     gen_title: str | None = None
     relevant: bool = True               # Dev Blog AI/Cloud filter
@@ -43,8 +64,12 @@ class Item:
         return len(self.content.split())
 
     @property
+    def full_word_count(self) -> int | None:
+        return full_words(self.content)
+
+    @property
     def truncated(self) -> bool:
-        return self.content.rstrip().endswith("[…truncated]")
+        return bool(TRUNCATED.search(self.content))
 
     @property
     def display_title(self) -> str:

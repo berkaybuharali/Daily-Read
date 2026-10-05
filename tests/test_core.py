@@ -13,9 +13,9 @@ import pytest
 
 from dailyread.config import load_config
 from dailyread.http import Http, HttpError, truncate_words
-from dailyread.models import Item, SourceStats
-from dailyread.pipeline import (RunOptions, clamp_summary, compute_window, it_pick_count, read_limits, review,
-                                sort_items, source_window, summary_problems)
+from dailyread.models import Item, SourceStats, reading_minutes
+from dailyread.pipeline import (RunOptions, clamp_summary, compute_window, counted_minutes, it_pick_count, read_limits,
+                                review, sort_items, source_window, summary_problems)
 from dailyread.sources.gcp_release_notes import split_notes
 from dailyread.state import LockedError, StateStore
 from dailyread.timeutil import Window
@@ -81,8 +81,19 @@ def test_release_note_ids_survive_a_prepended_note():
 def test_truncate_keeps_lines_and_marks():
     text = "- one two three\n- four five six\n- seven eight"
     out = truncate_words(text, 5)
-    assert out.splitlines()[0] == "- one two three" and out.endswith("[…truncated]")
+    assert out.splitlines()[0] == "- one two three" and out.endswith("[…truncated: 11 words in full]")
     assert truncate_words(text, 50) == text
+
+
+def test_full_length_survives_truncation_for_the_reading_time():
+    long = " ".join(["word"] * 2650)
+    cut = Item(id="a", source="x", url="https://x.test", published=None, day=date(2026, 10, 1),
+               content=truncate_words(long, 1200), content_origin="article")
+    assert cut.truncated and cut.word_count < 1210 and cut.full_word_count == 2650
+    assert reading_minutes(cut.full_word_count) == 10 and reading_minutes(40) == 1
+    assert reading_minutes(10 ** 9) == 999                         # a fake marker in feed text cannot blow it up
+    old = replace(cut, content="some text […truncated]")              # marker from before the count was kept
+    assert old.truncated and old.full_word_count is None and counted_minutes(old) is None     # unknown: the model estimates
 
 
 def test_summary_lint_and_clamp():
@@ -162,6 +173,24 @@ def test_review_missing_items_default_to_skip():
     review(FakeClaude({"items": [], "highlights": []}), CFG, [{"key": "x", "title": "X", "items": items}],
            Window(dt("2026-10-01T09:00"), dt("2026-10-02T09:00"), AMS))
     assert all(i.verdict == "skip" and i.stars in (2, 3) for i in items)
+
+
+def test_review_reading_time_is_counted_when_possible_and_estimated_otherwise():
+    article = replace(_item(1), content=" ".join(["w"] * 1325), content_origin="article")
+    excerpt = replace(_item(2), content="A short feed excerpt.", content_origin="feed")
+    unrated = replace(_item(3), content="Curator note.", content_origin="curator_note")
+    note = replace(_item(4), content="Fixed a bug.", content_origin="release_note")
+    out = {"items": [{"id": "i1", "stars": 4, "verdict": "read", "reason": "x", "read_minutes": 30},
+                     {"id": "i2", "stars": 2, "verdict": "skip", "reason": "x", "read_minutes": 8},
+                     {"id": "i3", "stars": 2, "verdict": "skip", "reason": "x", "read_minutes": 0},
+                     {"id": "i4", "stars": 2, "verdict": "skip", "reason": "x", "read_minutes": 2}], "highlights": []}
+    review(FakeClaude(out), CFG, [{"key": "x", "title": "X", "items": [article, excerpt, unrated]},
+                                  {"key": "bigquery_rn", "title": "BQ", "items": [note]}],
+           Window(dt("2026-10-01T09:00"), dt("2026-10-02T09:00"), AMS))
+    assert (article.read_minutes, article.minutes_estimated) == (5, False)       # counted words beat the model
+    assert (excerpt.read_minutes, excerpt.minutes_estimated) == (8, True)
+    assert unrated.read_minutes is None                                          # no estimate: nothing shown
+    assert note.read_minutes is None                                             # release notes are read in place
 
 
 def test_sort_puts_stars_first():

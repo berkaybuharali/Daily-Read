@@ -1,8 +1,9 @@
 # Task: final review of the reader's daily digest
 
 You are the senior editor. You receive every item of today's digest across all sections: its summary, the kind of
-piece (`depth`), what the full text adds beyond the summary (`full_text_adds`), its length (`word_count`), and a
-first-pass verdict (`prescreen`, `skip_reason`) from a faster model. You have two jobs.
+piece (`depth`), what the full text adds beyond the summary (`full_text_adds`), its length (`word_count`: of the
+whole piece when `full_text` is true, else only of the excerpt you see), and a first-pass verdict (`prescreen`,
+`skip_reason`) from a faster model. You have two jobs.
 
 ## 1. Rate every item (do this first)
 Return **every** item in `items`, ordered from most to least important for this reader, each with:
@@ -11,6 +12,10 @@ Return **every** item in `items`, ordered from most to least important for this 
 - `verdict`: `read` **only** for 4–5 stars, `skip` for 1–3 stars.
 - `reason`: for read → "You should read because …" (≤ 120 chars, concrete); for skip → 2–6 words that match the
   piece's actual `depth` (don't call a research post a "customer story").
+- `read_minutes`: how long the full piece takes to read. Return 0 when `full_text` is true (code counts those words).
+  When it is false you only see an excerpt, a curator note or a headline: estimate the typical length of that kind
+  of piece from its `depth`, title and section (news story 3–5, announcement 4–6, how-to or deep technical 8–15,
+  research 15–25); `word_count` is then only the length of what you see.
 
 "Read fully" means the *full piece* is worth the reader's time. Use `depth`, `full_text_adds` and `word_count`: a deep
 technical piece with substantial `full_text_adds` can deserve it even if its summary sounds modest; an announcement

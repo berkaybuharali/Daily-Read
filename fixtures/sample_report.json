@@ -59,7 +59,9 @@
      "verdict": "read",
      "reason": "You should read because it frames a practical review model for agent-written code.",
      "llm_error": null,
-     "stars": 4
+     "stars": 4,
+     "read_minutes": 7,
+     "minutes_estimated": false
     },
     {
      "id": "se2",
@@ -79,7 +81,9 @@
      "verdict": "skip",
      "reason": "summary is enough",
      "llm_error": null,
-     "stars": 3
+     "stars": 3,
+     "read_minutes": 4,
+     "minutes_estimated": true
     },
     {
      "id": "se3",
@@ -99,7 +103,9 @@
      "verdict": "skip",
      "reason": "overlaps with ✅ item",
      "llm_error": null,
-     "stars": 3
+     "stars": 3,
+     "read_minutes": 12,
+     "minutes_estimated": false
     },
     {
      "id": "se4",
@@ -119,7 +125,9 @@
      "verdict": "skip",
      "reason": "opinion piece",
      "llm_error": null,
-     "stars": 2
+     "stars": 2,
+     "read_minutes": 3,
+     "minutes_estimated": false
     }
    ],
    "filtered_out": 0,
@@ -270,7 +278,9 @@
      "verdict": "skip",
      "reason": "long read, low priority",
      "llm_error": null,
-     "stars": 2
+     "stars": 2,
+     "read_minutes": 18,
+     "minutes_estimated": false
     },
     {
      "id": "an2",
@@ -290,7 +300,9 @@
      "verdict": "skip",
      "reason": "customer story",
      "llm_error": null,
-     "stars": 1
+     "stars": 1,
+     "read_minutes": 6,
+     "minutes_estimated": false
     }
    ],
    "filtered_out": 0,
@@ -423,7 +435,9 @@
      "verdict": "read",
      "reason": "You should read because it shows how agents get governed gcloud access via MCP.",
      "llm_error": null,
-     "stars": 4
+     "stars": 4,
+     "read_minutes": 2,
+     "minutes_estimated": false
     },
     {
      "id": "gc2",
@@ -443,7 +457,9 @@
      "verdict": "skip",
      "reason": "niche product",
      "llm_error": null,
-     "stars": 2
+     "stars": 2,
+     "read_minutes": 9,
+     "minutes_estimated": false
     },
     {
      "id": "gc3",
@@ -463,7 +479,9 @@
      "verdict": "skip",
      "reason": "customer story",
      "llm_error": null,
-     "stars": 1
+     "stars": 1,
+     "read_minutes": 7,
+     "minutes_estimated": false
     }
    ],
    "filtered_out": 0,
@@ -541,7 +559,9 @@
      "verdict": "read",
      "reason": "You should read because it is a concrete agent-security incident with disclosure details.",
      "llm_error": null,
-     "stars": 4
+     "stars": 4,
+     "read_minutes": 4,
+     "minutes_estimated": false
     },
     {
      "id": "it2",
@@ -566,7 +586,9 @@
      "verdict": "skip",
      "reason": "summary is enough",
      "llm_error": null,
-     "stars": 3
+     "stars": 3,
+     "read_minutes": 12,
+     "minutes_estimated": false
     },
     {
      "id": "it5",
@@ -591,7 +613,9 @@
      "verdict": "skip",
      "reason": "summary is enough",
      "llm_error": null,
-     "stars": 3
+     "stars": 3,
+     "read_minutes": 3,
+     "minutes_estimated": false
     },
     {
      "id": "it4",
@@ -616,7 +640,9 @@
      "verdict": "skip",
      "reason": "summary is enough",
      "llm_error": null,
-     "stars": 3
+     "stars": 3,
+     "read_minutes": 18,
+     "minutes_estimated": false
     },
     {
      "id": "it3",
@@ -642,7 +668,9 @@
      "verdict": "skip",
      "reason": "outside interests",
      "llm_error": null,
-     "stars": 1
+     "stars": 1,
+     "read_minutes": 6,
+     "minutes_estimated": false
     }
    ],
    "filtered_out": 0,

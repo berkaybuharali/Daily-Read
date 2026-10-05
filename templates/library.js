@@ -41,6 +41,8 @@
       verdict: r.verdict === "read" || r.verdict === "skip" ? r.verdict : "",
       report: typeof r.report === "string" && STEM.test(r.report) ? r.report : "",
       summary: str(r.summary, 800), reason: str(r.reason, 300),
+      minutes: typeof r.minutes === "number" && r.minutes % 1 === 0 && r.minutes >= 0 && r.minutes <= 999 ? r.minutes : 0,
+      minutes_est: r.minutes_est === true,
       read_later: r.read_later === true, favorite: r.favorite === true, read: r.read === true, manual: r.manual === true,
       added_at: stamp(r.added_at), updated_at: stamp(r.updated_at)
     };
@@ -122,6 +124,7 @@
 
   // ---------- browser part ----------
   var HEART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+  var CLOCK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.8V8l2.2 1.4"/></svg>';
   var BOOK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
   function readJson(id) {
@@ -355,6 +358,15 @@
       s.appendChild(el("span", "off", "★".repeat(5 - n)));
       return s;
     }
+    // Same markup as render.read_time(): "7 min" counted from the article, "~7 min" estimated by the review.
+    function readTimeEl(rec) {
+      var n = rec.minutes;
+      var s = el("span", "rt");
+      s.title = "About " + n + " minute" + (n === 1 ? "" : "s") + " to read" + (rec.minutes_est ? " (estimated)" : "");
+      s.innerHTML = CLOCK;                       // constant markup, no data in it
+      s.appendChild(document.createTextNode((rec.minutes_est ? "~" : "") + n + " min"));
+      return s;
+    }
     function pillBtn(act, id, text, cls, label) {
       var b = el("button", "pill-btn " + cls, text);
       b.type = "button"; b.setAttribute("data-act", act); b.setAttribute("data-id", id); b.setAttribute("aria-label", label);
@@ -374,6 +386,7 @@
       if (rec.summary) main.appendChild(el("div", "lib-sum", rec.summary));
       var meta = el("div", "meta");
       meta.appendChild(starsEl(rec.stars));
+      if (rec.minutes) meta.appendChild(readTimeEl(rec));
       if (rec.verdict === "read") meta.appendChild(el("span", "v-pill read", "✅ Read fully"));
       main.appendChild(meta);
       var src = el("td", "c-source");
@@ -558,7 +571,7 @@
             if (merged) lib = mergeMaps(lib, merged);
             lastAdded = rec ? rec.id : "";
             saveLocal(); render();
-            $("add-result-source").textContent = rec ? rec.source : "";
+            $("add-result-source").textContent = rec ? rec.source + (rec.minutes ? " · " + (rec.minutes_est ? "~" : "") + rec.minutes + " min read" : "") : "";
             $("add-result-stars").textContent = rec ? stars(rec.stars) : "";
             $("add-result-stars").setAttribute("aria-label", rec ? rec.stars + " of 5 stars" : "");
             var verdict = $("add-result-verdict"); verdict.textContent = rec && rec.verdict === "read" ? "✅ Read fully" : "Summary is enough";

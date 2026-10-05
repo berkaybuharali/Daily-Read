@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from dailyread import library_helper, schedule
-from dailyread.library import EPOCH, clean_record, load_library, merge_docs, quarantine_if_damaged
+from dailyread.library import EPOCH, clean_record, load_library, merge_docs, quarantine_if_damaged, stamp_after
 from dailyread.library_helper import Server
 
 TOKEN = "test-token"
@@ -700,8 +700,8 @@ def test_adding_the_same_link_again_keeps_its_favorite_and_says_it_was_already_t
     rec = _new_record()
     helper.add_processor = lambda url: rec
     call(helper, "POST", "/add", body={"url": "x"})
-    call(helper, "POST", "/library", body=doc({**json.loads(helper.path.read_text())["items"][rec["id"]], "favorite": True,
-                                               "updated_at": "2026-10-05T00:00:00.000Z"}))
+    saved = json.loads(helper.path.read_text())["items"][rec["id"]]
+    call(helper, "POST", "/library", body=doc({**saved, "favorite": True, "updated_at": stamp_after(saved["updated_at"])}))
     answer = json.loads(call(helper, "POST", "/add", body={"url": "x"})[2])
     assert answer["existing"] is True and answer["record"]["favorite"] is True and answer["record"]["read_later"] is True
     assert len(json.loads(helper.path.read_text())["items"]) == 1
@@ -712,7 +712,7 @@ def test_a_link_you_removed_earlier_comes_back_when_you_add_it_again(helper):
     helper.add_processor = lambda url: rec
     call(helper, "POST", "/add", body={"url": "x"})
     saved = json.loads(helper.path.read_text())["items"][rec["id"]]
-    call(helper, "POST", "/library", body=doc({**saved, "read_later": False, "updated_at": "2026-10-04T23:00:00.000Z"}))
+    call(helper, "POST", "/library", body=doc({**saved, "read_later": False, "updated_at": stamp_after(saved["updated_at"])}))
     answer = json.loads(call(helper, "POST", "/add", body={"url": "x"})[2])
     assert answer["existing"] is False and answer["record"]["read_later"] is True
 

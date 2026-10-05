@@ -19,7 +19,7 @@ from .config import Config, Section
 from .http import Http, JsonCache, extract_article
 from .library import backup_library, library_path
 from .llm import Claude, LlmError, Usage
-from .models import Item, SourceResult, make_id
+from .models import Item, SourceResult, make_id, reading_minutes
 from .render import render_index, render_report
 from .sources import FETCHERS, IT_NEWS, RELEASE_NOTE_SECTIONS
 from .sources.base import Context, fail
@@ -351,6 +351,14 @@ def read_limits(window: Window) -> tuple[int, int]:
     return budget, budget + 2
 
 
+def counted_minutes(item: Item) -> int | None:
+    """Reading time counted from the whole text; None when only an excerpt, a curator note or a headline was fetched."""
+    words = item.full_word_count
+    if words is not None and (item.content_origin in ("article", "release_note") or item.extra.get("full_text")):
+        return reading_minutes(words)
+    return None
+
+
 def review(claude: Claude, cfg: Config, sections: list[dict], window: Window) -> list[dict]:
     """Sonnet rates every item 1-5 stars (4-5 = read) and writes 3-4 highlights. Limits enforced in code."""
     all_items: dict[str, Item] = {i.id: i for s in sections for i in s["items"] if not i.llm_error}
@@ -360,7 +368,8 @@ def review(claude: Claude, cfg: Config, sections: list[dict], window: Window) ->
     payload = {
         "window_days": round(window.days, 1), "read_budget": budget, "read_cap": cap,
         "items": [{"id": i.id, "section": s["title"], "date": i.day.isoformat(), "kind": i.kind, "depth": i.depth,
-                   "word_count": i.word_count, "title": i.display_title, "summary": i.summary,
+                   "word_count": i.full_word_count or i.word_count, "full_text": counted_minutes(i) is not None,
+                   "title": i.display_title, "summary": i.summary,
                    "full_text_adds": i.full_text_adds, "prescreen": i.prescreen,
                    "skip_reason": i.reason if i.prescreen == "skip" else "",
                    **({"outlets": i.extra.get("outlets"), "it_priority": i.kind} if s["key"] == IT_NEWS else {})}
@@ -382,6 +391,8 @@ def review(claude: Claude, cfg: Config, sections: list[dict], window: Window) ->
         item.stars = min(5, max(1, int(r.get("stars") or 2)))
         item.verdict = "read" if item.stars >= 4 else "skip"          # stars decide; verdict must agree
         item.reason = (r.get("reason") or "").strip() or None
+        if counted_minutes(item) is None and r.get("read_minutes"):
+            item.read_minutes, item.minutes_estimated = min(120, max(1, int(r["read_minutes"]))), True
     for item in all_items.values():
         if item.id not in order:                                      # model skipped it: keep first-pass view
             item.stars, item.verdict = (2 if item.prescreen == "skip" else 3), "skip"
@@ -404,6 +415,13 @@ def review(claude: Claude, cfg: Config, sections: list[dict], window: Window) ->
             if not item.reason or item.reason.lower().startswith("you should read"):
                 item.reason = "summary is enough"
             item.reason = item.reason[:60]
+
+    release_notes = {i.id for s in sections if s["key"] in RELEASE_NOTE_SECTIONS for i in s["items"]}
+    for item in all_items.values():                                   # read in place from the summary: no reading time
+        if item.id in release_notes:
+            item.read_minutes, item.minutes_estimated = None, False
+        elif not item.minutes_estimated:
+            item.read_minutes = counted_minutes(item)
 
     highlights = []
     for h in out.get("highlights", [])[:4]:

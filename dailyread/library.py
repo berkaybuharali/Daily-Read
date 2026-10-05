@@ -66,6 +66,11 @@ def _http_url(v) -> str:
     return u if re.match(r"^https?://", u, re.I) else ""
 
 
+def _minutes(v) -> int:
+    ok = isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 999 and float(v).is_integer()
+    return int(v) if ok else 0
+
+
 def clean_record(raw) -> dict | None:
     """Validate one record from an untrusted file/snapshot. Returns None when it is unusable."""
     if not isinstance(raw, dict):
@@ -80,11 +85,13 @@ def clean_record(raw) -> dict | None:
         "url": _http_url(raw.get("url")),
         "source": _text(raw.get("source"), 80),
         "published": raw["published"] if isinstance(raw.get("published"), str) and DAY.match(raw["published"]) else "",
-        "stars": int(stars) if isinstance(stars, (int, float)) and not isinstance(stars, bool) and float(stars).is_integer() and 0 <= stars <= 5 else 0,
+        "stars": int(stars) if isinstance(stars, (int, float)) and not isinstance(stars, bool) and 0 <= stars <= 5 and float(stars).is_integer() else 0,
         "verdict": raw["verdict"] if raw.get("verdict") in ("read", "skip") else "",
         "report": raw["report"] if isinstance(raw.get("report"), str) and STEM.match(raw["report"]) else "",
         "summary": _text(raw.get("summary"), 800),
         "reason": _text(raw.get("reason"), 300),
+        "minutes": _minutes(raw.get("minutes")),          # reading time; 0 = unknown
+        "minutes_est": raw.get("minutes_est") is True,    # estimated by the model, not counted
         "read_later": raw.get("read_later") is True,
         "favorite": raw.get("favorite") is True,
         "read": raw.get("read") is True,
@@ -140,6 +147,7 @@ def item_snapshots(sections: list[dict], shorts: dict[str, str], report: str = "
                 "source": (i.get("extra") or {}).get("writer") or shorts.get(s["key"]) or s["title"],
                 "published": i.get("day"), "stars": stars, "verdict": i.get("verdict"), "report": report,
                 "summary": (i.get("summary") or "").replace("`", ""), "reason": i.get("reason"),
+                "minutes": i.get("read_minutes") or 0, "minutes_est": bool(i.get("minutes_estimated")),
             })
             if rec:
                 snaps[rec["id"]] = rec

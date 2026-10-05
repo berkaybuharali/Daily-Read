@@ -64,6 +64,9 @@ cache/page_dates.json    publish dates scraped from article pages
 - **Summaries**: ≤300 chars, neutral, educational, faithful (see `prompts/summary_rules.md`).
 - **Stars & verdicts**: the final Sonnet review rates every item 1–5★; 4–5★ ⇔ "Read fully", 1–3★ ⇔ Skip (enforced in
   code). Budget ≈3 must-reads per day of window, hard cap budget+2 (`pipeline.read_limits`). Tables sort by stars.
+- **Reading time** (next to the stars, also in Read Later/Favorites as `minutes`/`minutes_est`): code counts it from the
+  full word count (`models.full_words`: `truncate_words` keeps it in the marker) at 265 wpm; the review model only
+  estimates it when there is no full text (`~N min`). None for release notes (`pipeline.counted_minutes`).
 - **IT news limits are enforced in code** (`run_it_news`) on the model's structured output: stories it flags as
   duplicates of other sections/recent reports are dropped, ≤2 per company (by the model's company name), ~5 per
   normal day, more only for importance ≥4, max 10.

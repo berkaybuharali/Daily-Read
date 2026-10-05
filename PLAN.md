@@ -92,7 +92,9 @@ S2a SUMMARIZE + PRE-SCREEN — Sonnet, parallel (≤4)      S2b IT PRE-FILTER �
           └──────────────────────┬──────────────────────────────┘
 S4  REVIEW — Sonnet (thinking), one call over every item
     1–5★ per item using the star rubric; 4–5★ = "Read fully" (enforced in code);
-    budget ≈3 per day of window, hard cap budget+2 (pipeline.read_limits); 3–4 highlights
+    budget ≈3 per day of window, hard cap budget+2 (pipeline.read_limits); 3–4 highlights;
+    reading time: counted in code from the full word count (265 wpm; the truncation marker keeps it), estimated by
+    the model only without full text (shown as "~N min"), none for release notes
 S5  RENDER — Jinja2 (autoescape, fonts/CSS inlined) → HTML; sections sorted by config order, empty ones last
 S6  PERSIST — real runs only when complete: state.json, seen.json, sources.json, runs.jsonl, archive
 ```text

@@ -333,7 +333,8 @@ def record_id(url: str) -> str:
     return make_id("manual", url)
 
 
-def make_record(cfg: Config, url: str, meta: dict, out: dict, now: datetime | None = None) -> dict:
+def make_record(cfg: Config, url: str, meta: dict, out: dict, now: datetime | None = None, text: str = "") -> dict:
+    from .models import full_words, reading_minutes
     from .pipeline import clamp_summary
     now = now or datetime.now(cfg.tz)
     stars = int(out["stars"])
@@ -345,6 +346,7 @@ def make_record(cfg: Config, url: str, meta: dict, out: dict, now: datetime | No
         "published": now.date().isoformat(),               # the day it was ADDED: the list sorts by it, newest first
         "stars": stars, "verdict": "read" if stars >= 4 else "skip",         # 4-5 stars <=> "Read fully" (project rule)
         "summary": clamp_summary(out["summary"], 300), "reason": out["reason"],
+        "minutes": reading_minutes(full_words(text) or 0) if text.strip() else 0,      # counted from the article text
         "read_later": True, "favorite": False, "read": False, "manual": True, "added_at": stamp, "updated_at": stamp,
     })
     if rec is None:
@@ -360,6 +362,6 @@ def process(cfg: Config, raw_url: str) -> dict:
         html, text, via = read_page(url, cfg, proxy.url)
     meta = metadata(html, url)
     out = summarize(cfg, meta, text)
-    rec = make_record(cfg, url, meta, out)
+    rec = make_record(cfg, url, meta, out, text=text)
     log.info("added a link from %s via %s: %s stars, source %r", urlsplit(url).hostname, via, rec["stars"], rec["source"])
     return rec

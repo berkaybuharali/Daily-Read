@@ -8,6 +8,8 @@ reading in full, and opens a single self-contained HTML report in your browser.
 - **Runs on your Claude subscription** through headless Claude Code (`claude -p`). No API key needed (an `ANTHROPIC_API_KEY` in your environment is ignored).
 - **Strict about your time**: every item gets 1–5★; only 4–5★ items are marked *Read fully*, with a daily budget
   of about 3 must-reads (enforced in code). Everything else is one 300-character summary.
+- **Reading time** next to the stars: counted from the article (265 words a minute, like Medium) when the full text
+  was fetched; `~7 min` means Claude estimated it because only an excerpt, a curator note or a headline was available.
 - **One row per item**: each release note, version, post and reading-list link gets its own row.
 - **Top IT news**: 5–10 deduplicated industry stories, at most 2 per company.
 - **Read Later and Favorites**: a bookmark and a heart on every row, with two extra tabs that list what you saved; see [Read Later and Favorites](#read-later-and-favorites).
@@ -186,7 +188,7 @@ Every report has three tabs: **Today**, **Read Later** and **Favorites**.
 - **Read Later** lists what you saved, newest article first, with the source as a column. Each row has **✓ Read**
   (dims it and moves it to the bottom), **✕ Remove**, a heart, and a link back to the daily report it came from.
   **Favorites** has the same columns.
-- Both tabs have a search box. Each saved item keeps its title, link, source, publish date, stars and summary, so the
+- Both tabs have a search box. Each saved item keeps its title, link, source, publish date, stars, reading time and summary, so the
   lists are plain lookups: no Claude call, no network.
 
 ![Read Later tab: add-a-link box, saved items newest first, with Read / Remove buttons and a link back to the daily report](docs/read-later.png)
@@ -328,7 +330,7 @@ The file is the master copy, so your lists are not tied to a browser:
 4. Run `bin/dailyread render --all` (no Claude call) or wait for the next daily run. Your saved items are baked into
    the reports, so Read Later and Favorites are restored.
 
-- The file is `{"version": 1, "items": {"<id>": {title, url, source, published, report, stars, summary, read_later,
+- The file is `{"version": 1, "items": {"<id>": {title, url, source, published, report, stars, minutes, summary, read_later,
   favorite, read, updated_at, ...}}}`. Removing an item keeps a small record with both flags off so the removal wins a
   merge between the browser and the file (newest change per item wins).
 

@@ -197,6 +197,17 @@ def test_the_manual_flag_matches_the_browser_loader():
     assert clean_record(rec(manual="yes"))["manual"] is False and clean_record(rec())["manual"] is False
 
 
+def test_reading_time_is_validated_like_the_browser_loader():
+    r = clean_record(rec(minutes=7, minutes_est=True))
+    assert r["minutes"] == 7 and r["minutes_est"] is True
+    for bad in (-1, 1000, 2.5, True, "7", None):
+        assert clean_record(rec(minutes=bad))["minutes"] == 0
+    assert clean_record(rec(minutes=7.0))["minutes"] == 7
+    huge = clean_record(rec(minutes=10 ** 400, stars=10 ** 400))           # float() of these would raise OverflowError
+    assert huge["minutes"] == 0 and huge["stars"] == 0
+    assert clean_record(rec(minutes_est="yes"))["minutes_est"] is False and clean_record(rec())["minutes_est"] is False
+
+
 def test_control_and_bidi_override_characters_cannot_disguise_saved_text():
     r = clean_record(rec(title="Safe\u202etxt.exe\x07 title\u2066x", source="Goo\x00gle\u061c", summary="a\tb\nc"))
     assert r["title"] == "Safetxt.exe titlex" and r["source"] == "Google" and r["summary"] == "a b c"

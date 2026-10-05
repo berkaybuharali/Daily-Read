@@ -231,6 +231,9 @@ a.t-title:hover { color: var(--dr-accent); }
 .stars { font-size: .82rem; letter-spacing: 1px; line-height: 1; color: var(--dr-star); white-space: nowrap; }
 .stars .off { color: var(--dr-border); }
 .stars.s1, .stars.s2, .stars.s3 { color: color-mix(in srgb, var(--dr-star) 55%, var(--dr-faint)); }
+.rt { display: inline-flex; align-items: center; gap: 3px; font-size: .74rem; font-weight: 750; line-height: 1; color: var(--dr-faint); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rt svg { width: 12px; height: 12px; flex: none; opacity: .85; }
+.v-top .rt { flex-basis: 100%; margin-top: -1px; }     /* Today: its own line under the stars, the same in every row */
 .v-why { font-size: .87rem; line-height: 1.45; }
 .verdict.read .v-why { color: var(--dr-text); font-weight: 650; }
 .verdict.skip .v-why { color: var(--dr-faint); font-weight: 650; }

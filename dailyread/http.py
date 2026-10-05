@@ -125,11 +125,9 @@ def extract_article(html: str, max_words: int) -> str:
     return truncate_words(text, max_words)
 
 
-TRUNCATED = "[…truncated]"
-
-
 def truncate_words(text: str, max_words: int) -> str:
-    """Cut to max_words, keeping line breaks (lists stay lists). Appends a visible marker when cut."""
+    """Cut to max_words, keeping line breaks (lists stay lists). Appends a visible marker when cut that keeps the full
+    length, so the reading time can still be counted (`Item.full_word_count`)."""
     text = text.strip()
     count = 0
     out = []
@@ -138,7 +136,7 @@ def truncate_words(text: str, max_words: int) -> str:
         if count + len(words) > max_words:
             if max_words - count > 0:
                 out.append(" ".join(words[: max_words - count]))
-            out.append(TRUNCATED)
+            out.append(f"[…truncated: {len(text.split())} words in full]")
             return "\n".join(out)
         out.append(line)
         count += len(words)

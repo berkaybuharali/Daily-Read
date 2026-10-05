@@ -15,7 +15,7 @@ Goal: a reader who only reads the summary learns what the item is and what it ch
   launch stage (GA / Preview / Public Preview / Deprecated).
 - **No filler openers**: never start with "This article", "The author", "In this post", "This release",
   "This update", "Google announces", "Anthropic announces". Start with the subject itself.
-- **Truncated content** (`truncated: true`, text ends with "[…truncated]"): you only see the beginning. Never state
+- **Truncated content** (`truncated: true`, text ends with "[…truncated: N words in full]"): you only see the beginning. Never state
   totals or counts for the whole piece ("50+ fixes", "12 features"); describe what you can see.
 - **Title only** (`source_type: title_only`): write one cautious sentence about what the title says the piece covers.
 - **Curator-note fallback** (`source_type: curator_note`): the article text was unavailable; you only have the
